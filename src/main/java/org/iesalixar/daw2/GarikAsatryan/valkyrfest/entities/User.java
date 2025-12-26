@@ -6,7 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.iesalixar.daw2.GarikAsatryan.valkyrfest.validation.IsAdult;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,11 @@ public class User {
     @Size(max = 100, message = "{msg.user.lastName.size}")
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
+
+    @NotNull(message = "{msg.user.birthDate.notNull}")
+    @IsAdult
+    @Column(name = "birth_date", nullable = false)
+    private LocalDate birthDate;
 
     @NotEmpty(message = "{msg.user.phone.notEmpty}")
     @Size(max = 30, message = "{msg.user.phone.size}")
