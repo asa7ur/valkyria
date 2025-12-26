@@ -49,7 +49,7 @@ public class User {
     private String lastName;
 
     @NotNull(message = "{msg.validation.required}")
-    @IsAdult // Este ya usa su propia clave {msg.notAdult} por defecto
+    @IsAdult
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 

@@ -1,6 +1,6 @@
-INSERT IGNORE INTO users (email, password, enabled, first_name, last_name, phone)
+INSERT IGNORE INTO users (email, password, enabled, first_name, last_name, birth_date, phone)
 VALUES ('garik@email.com', '$2a$12$5ML1PTu9DvomnxZP.TDen.nc/5.L0AU2x2A82Yt1BVv1eWenkuO7q', true, 'Garik', 'Asatryan',
-        '666666666');
+        '1996-12-30', '666666666');
 
 INSERT IGNORE INTO roles (name)
 VALUES ('Admin'),
