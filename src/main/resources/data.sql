@@ -65,3 +65,16 @@ VALUES ('Gojira', '+33 1 42 67 00 00', 'contact@gojira-music.com', 'Progressive 
        ('Bring Me The Horizon', '+44 114 555 0199', 'bmth@rawpower-mgmt.com', 'Alternative Metal', 'UK'),
        ('Three Days Grace', '+1 416 555 0177', 'info@threedaysgrace.com', 'Alternative Rock', 'Canada'),
        ('Iron Maiden', '+44 20 8946 0000', 'phantom@ironmaiden.com', 'Heavy Metal', 'UK');
+
+INSERT IGNORE INTO ticket_types (name, price, stock_total, stock_available)
+VALUES ('Senda del Guerrero (Abono General)', 95.00, 5000, 5000),
+       ('Banquete en el Valhalla (Experiencia VIP)', 250.00, 200, 200),
+       ('Miércoles - Entrada de Día', 45.00, 1000, 1000),
+       ('Jueves - Entrada de Día', 45.00, 1000, 1000),
+       ('Viernes - Entrada de Día', 55.00, 1000, 1000),
+       ('Sábado - Entrada de Día', 60.00, 1000, 1000);
+
+INSERT IGNORE INTO camping_types (name, price, stock_total, stock_available)
+VALUES ('Sombra de Yggdrasil (Camping Sombra)', 30.00, 500, 500),
+       ('Morada de Freya (Glamping de Lujo)', 150.00, 50, 50),
+       ('Drakkar sobre Ruedas (Zona Caravanas)', 80.00, 100, 100);
