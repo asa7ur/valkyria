@@ -40,7 +40,7 @@ public class Camping {
     @NotBlank(message = "{msg.camping.documentNumber.notBlank}")
     @Size(max = 20)
     @Column(name = "document_number", nullable = false, length = 20)
-    private String document_number;
+    private String documentNumber;
 
     @NotNull(message = "{msg.camping.birthDate.notNull}")
     @IsAdult
@@ -52,7 +52,7 @@ public class Camping {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private CampingStatus status = CampingStatus.ACTIVE;
+    private AttendeeStatus status = AttendeeStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "camping_type_id")
@@ -61,12 +61,4 @@ public class Camping {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
-
-    public enum DocumentType {
-        DNI, NIE, PASSPORT
-    }
-
-    public enum CampingStatus {
-        ACTIVE, USED, CANCELLED
-    }
 }

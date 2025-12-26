@@ -40,7 +40,7 @@ public class Ticket {
     @NotBlank(message = "{msg.ticket.documentNumber.notBlank}")
     @Size(max = 20)
     @Column(name = "document_number", nullable = false, length = 20)
-    private String document_number;
+    private String documentNumber;
 
     @NotNull(message = "{msg.ticket.birthDate.notNull}")
     @IsAdult
@@ -52,7 +52,7 @@ public class Ticket {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private TicketStatus status = TicketStatus.ACTIVE;
+    private AttendeeStatus status = AttendeeStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_type_id")
@@ -61,12 +61,4 @@ public class Ticket {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
-
-    public enum DocumentType {
-        DNI, NIE, PASSPORT
-    }
-
-    public enum TicketStatus {
-        ACTIVE, USED, CANCELLED
-    }
 }
