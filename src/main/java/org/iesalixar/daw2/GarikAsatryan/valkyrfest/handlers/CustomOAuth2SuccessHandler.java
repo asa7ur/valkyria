@@ -8,6 +8,8 @@ import org.iesalixar.daw2.GarikAsatryan.valkyrfest.repositories.UserRepository;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.CustomUserDetailsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,8 +25,10 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2SuccessHandler.class);
+
     private final UserRepository userRepository;
     private final CustomUserDetailsService customUserDetailsService;
+    private final MessageSource messageSource;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -37,7 +41,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         if (email == null || !userRepository.existsByEmail(email)) {
             logger.warn("OAuth2 authentication failed: Email {} is not registered in the local database", email);
-            throw new OAuth2AuthenticationException("The email " + email + " is not registered in the system.");
+            String errorMsg = messageSource.getMessage("msg.login.oauth2.notRegistered", new Object[]{email}, LocaleContextHolder.getLocale());
+            throw new OAuth2AuthenticationException(errorMsg);
         }
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
