@@ -52,7 +52,7 @@ public class Ticket {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private AttendeeStatus status = AttendeeStatus.ACTIVE;
+    private TicketStatus status = TicketStatus.ACTIVE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_type_id")
