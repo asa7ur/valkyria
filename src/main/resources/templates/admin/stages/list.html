@@ -28,7 +28,6 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead class="table-dark">
                     <tr>
-                        <th th:text="#{msg.admin.id}">ID</th>
                         <th th:text="#{msg.admin.stages.name}">Nombre</th>
                         <th th:text="#{msg.admin.stages.capacity}">Capacidad</th>
                         <th class="text-center" th:text="#{msg.admin.actions}">Acciones</th>
@@ -36,7 +35,6 @@
                     </thead>
                     <tbody>
                     <tr th:each="stage : ${stages}">
-                        <td th:text="${stage.id}">1</td>
                         <td class="fw-bold" th:text="${stage.name}">Nombre del Escenario</td>
                         <td th:text="${stage.capacity}">Capacidad total</td>
                         <td class="text-center">

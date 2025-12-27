@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{admin/layout :: head(title=${stage.id == null ? #{msg.admin.stages.new} : #{msg.admin.stages.edit}})}"></head>
+<head th:replace="~{admin/layout :: head(title=(${stage.id == null} ? #{msg.admin.stages.form.header.new} : #{msg.admin.stages.form.header.edit}))}"></head>
 <body>
 <div th:replace="~{admin/layout :: navbar}"></div>
 
@@ -11,7 +11,7 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2"
-                    th:text="${stage.id == null ? #{msg.admin.stages.form.header.new} : #{msg.admin.stages.form.header.edit}}">
+                    th:text="${stage.id == null} ? #{msg.admin.stages.form.header.new} : #{msg.admin.stages.form.header.edit}">
                     Formulario de Escenario</h1>
                 <a th:href="@{/admin/festival/stages}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> <span th:text="#{msg.admin.back_to_list}">Volver al listado</span>
@@ -57,7 +57,7 @@
                             </button>
                             <button type="submit" class="btn btn-success px-4">
                                 <i class="bi bi-save me-1"></i>
-                                <span th:text="${stage.id == null ? #{msg.admin.save} : #{msg.admin.update}}">Guardar</span>
+                                <span th:text="${stage.id == null} ? #{msg.admin.save} : #{msg.admin.update}">Guardar</span>
                             </button>
                         </div>
                     </form>
