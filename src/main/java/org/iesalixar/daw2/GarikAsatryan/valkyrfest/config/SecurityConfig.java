@@ -32,14 +32,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configuring SecurityFilterChain for Google and Facebook OAuth2...");
+        logger.info("Configuring SecurityFilterChain...");
 
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/register", "/error", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/admin/festival/**").hasAnyRole("Admin", "Manager")
-                        .requestMatchers("/admin/roles/**").hasRole("Admin")
-                        .requestMatchers("/orders/**").hasAnyRole("Admin", "Manager", "User")
+                        .requestMatchers("/admin/**").hasAnyRole("Admin", "Manager")
+                        .requestMatchers("/admin/users/**", "/admin/roles/**").hasRole("Admin")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
