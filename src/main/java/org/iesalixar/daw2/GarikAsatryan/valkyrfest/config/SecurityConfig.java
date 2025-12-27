@@ -1,6 +1,7 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyrfest.config;
 
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyrfest.handlers.CustomLoginSuccessHandler;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.handlers.CustomOAuth2FailureHandler;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.handlers.CustomOAuth2SuccessHandler;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.CustomUserDetailsService;
@@ -25,6 +26,7 @@ public class SecurityConfig {
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final CustomUserDetailsService userDetailsService;
+    private final CustomLoginSuccessHandler customLoginSuccessHandler;
     private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
     private final CustomOAuth2FailureHandler customOAuth2FailureHandler;
 
@@ -42,7 +44,7 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
+                        .successHandler(customLoginSuccessHandler)
                         .permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
