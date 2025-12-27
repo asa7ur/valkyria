@@ -38,7 +38,7 @@
                     <tbody>
                     <tr th:each="type : ${campingTypes}">
                         <td class="fw-bold" th:text="${type.name}">Nombre</td>
-                        <td th:text="|${type.price} €|">Price</td>
+                        <td th:text="${type.price} + ' €'">Price</td>
                         <td th:text="${type.stockTotal}">Stock</td>
                         <td>
                             <span class="badge" th:classappend="${type.stockAvailable > 0 ? 'bg-info' : 'bg-danger'}"

@@ -28,7 +28,6 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
                         <th th:text="#{msg.admin.orders.date}">Fecha</th>
                         <th th:text="#{msg.admin.orders.user}">Usuario</th>
                         <th th:text="#{msg.admin.orders.total}">Total</th>
@@ -38,10 +37,9 @@
                     </thead>
                     <tbody>
                     <tr th:each="order : ${orders}">
-                        <td th:text="${order.id}">1</td>
                         <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">Fecha</td>
                         <td th:text="${order.user.email}">user@example.com</td>
-                        <td class="fw-bold" th:text="|${order.totalPrice} €|">0.00 €</td>
+                        <td class="fw-bold" th:text="${order.totalPrice} + ' €'">0.00 €</td>
                         <td>
                             <span class="badge"
                                   th:classappend="${order.status.name() == 'PAID' ? 'bg-success' : (order.status.name() == 'PENDING' ? 'bg-warning' : 'bg-danger')}"

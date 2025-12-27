@@ -39,13 +39,15 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Tipo Documento</label>
+                                <label class="form-label fw-bold" th:text="#{msg.admin.campings.docType}">Tipo
+                                    Documento</label>
                                 <select th:field="*{documentType}" class="form-select">
                                     <option th:each="dt : ${docTypes}" th:value="${dt}" th:text="${dt}"></option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Núm. Documento</label>
+                                <label class="form-label fw-bold" th:text="#{msg.admin.campings.docNumber}">Núm.
+                                    Documento</label>
                                 <input type="text" th:field="*{documentNumber}" class="form-control"
                                        th:errorclass="is-invalid">
                                 <div class="invalid-feedback" th:errors="*{documentNumber}"></div>
@@ -60,21 +62,23 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Modalidad Camping</label>
+                                <label class="form-label fw-bold" th:text="#{msg.admin.campings.campingType}">Modalidad
+                                    Camping</label>
                                 <select th:field="*{campingType}" class="form-select">
                                     <option th:each="ct : ${campingTypes}" th:value="${ct.id}"
                                             th:text="${ct.name}"></option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Pedido (Order ID)</label>
+                                <label class="form-label fw-bold" th:text="#{msg.admin.campings.orderId}">Pedido (Order
+                                    ID)</label>
                                 <select th:field="*{order}" class="form-select">
                                     <option th:each="o : ${orders}" th:value="${o.id}"
                                             th:text="|ID: ${o.id} - ${o.user.email}|"></option>
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Estado</label>
+                                <label class="form-label fw-bold" th:text="#{msg.admin.campings.state}">Estado</label>
                                 <select th:field="*{status}" class="form-select">
                                     <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option>
                                 </select>
