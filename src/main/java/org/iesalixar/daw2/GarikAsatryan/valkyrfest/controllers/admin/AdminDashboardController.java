@@ -1,10 +1,7 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyrfest.controllers.admin;
 
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.ArtistService;
-import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.PerformanceService;
-import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.StageService;
-import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.UserService;
+import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +16,10 @@ public class AdminDashboardController {
     private final StageService stageService;
     private final PerformanceService performanceService;
     private final UserService userService;
+    private final OrderService orderService;
+    private final TicketService ticketService;
+    private final CampingService campingService;
+    private final SponsorService sponsorService;
 
     /**
      * Shows the main Dashboard view with statistical counters.
@@ -30,6 +31,10 @@ public class AdminDashboardController {
         model.addAttribute("stageCount", stageService.getAllStages().size());
         model.addAttribute("performanceCount", performanceService.getAllPerformances().size());
         model.addAttribute("userCount", userService.getAllUsers().size());
+        model.addAttribute("orderCount", orderService.getAllOrders().size());
+        model.addAttribute("ticketCount", ticketService.getAllTickets().size());
+        model.addAttribute("campingCount", campingService.getAllCampings().size());
+        model.addAttribute("sponsorCount", sponsorService.getAllSponsors().size());
 
         // Attribute to mark the active link in the side menu.
         model.addAttribute("activePage", "dashboard");
