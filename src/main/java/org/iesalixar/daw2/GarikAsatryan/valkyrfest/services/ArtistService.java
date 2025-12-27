@@ -23,12 +23,12 @@ public class ArtistService {
     }
 
     @Transactional
-    public Artist saveArtist(Artist artist) {
-        return artistRepository.save(artist);
+    public void saveArtist(Artist artist) {
+        artistRepository.save(artist);
     }
 
     @Transactional
-    public void deleteArtistById(Long id) {
+    public void deleteArtist(Long id) {
         artistRepository.deleteById(id);
     }
 }

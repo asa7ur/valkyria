@@ -23,8 +23,8 @@ public class SponsorService {
     }
 
     @Transactional
-    public Sponsor saveSponsor(Sponsor sponsor) {
-        return sponsorRepository.save(sponsor);
+    public void saveSponsor(Sponsor sponsor) {
+        sponsorRepository.save(sponsor);
     }
 
     @Transactional

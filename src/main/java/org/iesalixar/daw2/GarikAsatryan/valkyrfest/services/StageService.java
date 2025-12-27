@@ -23,8 +23,8 @@ public class StageService {
     }
 
     @Transactional
-    public Stage saveStage(Stage stage) {
-        return stageRepository.save(stage);
+    public void saveStage(Stage stage) {
+        stageRepository.save(stage);
     }
 
     @Transactional

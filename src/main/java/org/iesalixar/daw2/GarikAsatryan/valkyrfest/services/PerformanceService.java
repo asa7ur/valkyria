@@ -23,8 +23,8 @@ public class PerformanceService {
     }
 
     @Transactional
-    public Performance savePerformance(Performance performance) {
-        return performanceRepository.save(performance);
+    public void savePerformance(Performance performance) {
+        performanceRepository.save(performance);
     }
 
     @Transactional
