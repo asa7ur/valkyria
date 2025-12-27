@@ -2,6 +2,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyrfest.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -39,7 +40,7 @@ public class Sponsor {
     @Column(name = "email", unique = true, nullable = false, length = 100)
     private String email;
 
-    @NotEmpty(message = "{msg.validation.required}")
+    @NotNull(message = "{msg.validation.required}")
     @Column(name = "contribution", precision = 10, scale = 2, nullable = false)
     private BigDecimal contribution;
 
