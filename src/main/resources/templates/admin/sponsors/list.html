@@ -40,7 +40,7 @@
                         <td class="fw-bold" th:text="${s.name}">Nombre</td>
                         <td th:text="${s.phone}">123456789</td>
                         <td th:text="${s.email}">email@ejemplo.com</td>
-                        <td th:text="${#numbers.formatDecimal(s.contribution, 1, 'POINT', 2, 'ZERO')}">
+                        <td th:text="${#numbers.formatDecimal(s.contribution, 1, 'NONE', 2, 'POINT')}">
                             0.00
                         </td>
                         <td class="text-center">
