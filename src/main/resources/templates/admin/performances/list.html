@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{admin/layout :: head(title=#{msg.admin.performances.list.title})}"></head>
+
 <body>
 <div th:replace="~{admin/layout :: navbar}"></div>
 
@@ -9,18 +10,17 @@
         <div th:replace="~{admin/layout :: sidebar}"></div>
 
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2" th:text="#{msg.admin.performances.header}">Cronograma del Festival</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a th:href="@{/admin/festival/performances/new}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-calendar-plus me-1"></i>
-                        <span th:text="#{msg.admin.performances.new}">Nueva Presentación</span>
-                    </a>
-                </div>
+
+                <th:block
+                        th:replace="~{admin/fragments/table-utils :: header-tools('/admin/festival/performances', '/admin/festival/performances/new', #{msg.admin.performances.new})}"></th:block>
             </div>
 
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <span th:text="${successMessage}"></span>
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span th:text="${successMessage}">Mensaje de éxito</span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
@@ -28,10 +28,10 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead class="table-dark">
                     <tr>
-                        <th th:text="#{msg.admin.performances.artist}">Artista</th>
-                        <th th:text="#{msg.admin.performances.stage}">Escenario</th>
-                        <th th:text="#{msg.admin.performances.start}">Inicio</th>
-                        <th th:text="#{msg.admin.performances.end}">Fin</th>
+                        <th th:replace="~{admin/fragments/table-utils :: column('/admin/festival/performances', 'artist', #{msg.admin.performances.artist})}"></th>
+                        <th th:replace="~{admin/fragments/table-utils :: column('/admin/festival/performances', 'stage', #{msg.admin.performances.stage})}"></th>
+                        <th th:replace="~{admin/fragments/table-utils :: column('/admin/festival/performances', 'startTime', #{msg.admin.performances.start})}"></th>
+                        <th th:replace="~{admin/fragments/table-utils :: column('/admin/festival/performances', 'endTime', #{msg.admin.performances.end})}"></th>
                         <th class="text-center" th:text="#{msg.admin.actions}">Acciones</th>
                     </tr>
                     </thead>
@@ -62,14 +62,18 @@
                             </div>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(performances)}">
-                        <td colspan="6" class="text-center py-4 text-muted" th:text="#{msg.admin.performances.empty}">
-                            No hay conciertos programados todavía.
+                    <tr th:if="${performances == null || #lists.isEmpty(performances)}">
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-info-circle d-block fs-2 mb-2"></i>
+                            <p th:text="#{msg.admin.no_results}">No se encontraron presentaciones.</p>
                         </td>
                     </tr>
                     </tbody>
                 </table>
             </div>
+
+            <div th:replace="~{admin/fragments/table-utils :: pagination-nav('/admin/festival/performances')}"></div>
+
         </main>
     </div>
 </div>

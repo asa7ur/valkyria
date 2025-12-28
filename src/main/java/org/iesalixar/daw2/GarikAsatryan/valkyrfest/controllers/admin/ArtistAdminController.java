@@ -31,9 +31,10 @@ public class ArtistAdminController {
             String searchTerm,
             @PageableDefault(size = 10) Pageable pageable,
             Model model) {
+
         Page<Artist> artistPage = artistService.getAllArtists(searchTerm, pageable);
 
-        model.addAttribute("artists", artistService.getAllArtists());
+        model.addAttribute("artists", artistPage.getContent());
         PaginationUtils.setupPaginationModel(model, artistPage, pageable, searchTerm, "artists");
         return "admin/artists/list";
     }

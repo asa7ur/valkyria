@@ -30,9 +30,7 @@
                     <tr>
                         <th th:replace="~{admin/fragments/table-utils :: column('/admin/festival/users', 'firstName', #{msg.admin.artists.name})}"></th>
                         <th th:replace="~{admin/fragments/table-utils :: column('/admin/festival/users', 'email', 'Email')}"></th>
-
                         <th th:text="#{msg.register.phone}">Teléfono</th>
-
                         <th th:replace="~{admin/fragments/table-utils :: column('/admin/festival/users', 'enabled', #{msg.admin.users.status})}"></th>
                         <th class="text-center" th:text="#{msg.admin.actions}">Acciones</th>
                     </tr>
