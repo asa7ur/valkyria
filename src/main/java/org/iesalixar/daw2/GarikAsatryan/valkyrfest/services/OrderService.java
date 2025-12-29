@@ -36,12 +36,12 @@ public class OrderService {
         return orderRepository.findById(id);
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void saveOrder(Order order) {
         orderRepository.save(order);
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void deleteOrder(Long id) {
         orderRepository.deleteById(id);
     }
