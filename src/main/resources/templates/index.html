@@ -24,10 +24,14 @@
 
         <div sec:authorize="isAuthenticated()" class="mt-4">
             <p class="fs-4">
-                <span>Hola, festivalero!</span>
+                <span>¡Hola, festivalero!</span>
                 <strong sec:authentication="name" class="text-warning">User</strong>
             </p>
             <div class="d-flex justify-content-center gap-2">
+                <a th:href="@{/purchase}" class="btn btn-success">
+                    <i class="bi bi-ticket-perforated me-2"></i>Comprar Entradas
+                </a>
+
                 <a sec:authorize="hasAnyRole('Admin', 'Manager')" th:href="@{/admin/dashboard}" class="btn btn-warning">
                     <i class="bi bi-speedometer2 me-2"></i>Panel de Control
                 </a>
