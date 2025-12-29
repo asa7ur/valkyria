@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.validation.IsAdult;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,6 +50,7 @@ public class User {
     private String lastName;
 
     @NotNull(message = "{msg.validation.required}")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @IsAdult
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;

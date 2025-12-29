@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.validation.FieldsComparison;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -26,10 +27,12 @@ public class Performance {
     private Long id;
 
     @NotNull(message = "{msg.validation.required}")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
     @NotNull(message = "{msg.validation.required}")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 

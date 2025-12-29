@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.validation.IsAdult;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
@@ -43,6 +44,7 @@ public class Camping {
     private String documentNumber;
 
     @NotNull(message = "{msg.validation.required}")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     @IsAdult
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
