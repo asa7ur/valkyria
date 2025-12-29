@@ -3,7 +3,6 @@ package org.iesalixar.daw2.GarikAsatryan.valkyrfest.controllers;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.dto.PurchaseRequestDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.entities.Order;
-import org.iesalixar.daw2.GarikAsatryan.valkyrfest.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.CampingTypeService;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.OrderService;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.PurchaseService;
