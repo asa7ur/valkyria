@@ -24,8 +24,8 @@ public class TicketTypeService {
     }
 
     @Transactional
-    public TicketType saveTicketType(TicketType ticketType) {
-        return ticketTypeRepository.save(ticketType);
+    public void saveTicketType(TicketType ticketType) {
+        ticketTypeRepository.save(ticketType);
     }
 
     @Transactional
