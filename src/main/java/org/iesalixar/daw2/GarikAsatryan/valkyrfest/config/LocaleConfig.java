@@ -28,6 +28,7 @@ public class LocaleConfig implements WebMvcConfigurer {
     public LocaleChangeInterceptor localeChangeInterceptor() {
         LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
         interceptor.setParamName("lang");
+        interceptor.setHttpMethods("GET", "POST");
         logger.info("LocaleChangeInterceptor configurado con el parámetro 'lang'");
         return interceptor;
     }
