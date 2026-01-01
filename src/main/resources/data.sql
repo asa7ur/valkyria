@@ -1,8 +1,7 @@
 INSERT IGNORE INTO users (email, password, enabled, first_name, last_name, birth_date, phone)
-VALUES ('garik@email.com', '$2a$12$8LssFTKG6GY.pl7Xd.K8DOHFHWwUUm1wOzQ5L4LT9uoIB2XbXYw9a', true, 'Garik', 'Asatryan',
-        '1996-12-30', '666666666'),
-       ('paula@email.com', '$2a$12$jKTxYa0fSqWzb2UrhHxR8uDn5/ArJrh4VQ1zNxJHCU7.LsZmEUE/.', true, 'Paula', 'Martín',
-        '1995-08-24', '777777777');
+VALUES ('garik@email.com', '$2a$12$8LssFTKG6GY.pl7Xd.K8DOHFHWwUUm1wOzQ5L4LT9uoIB2XbXYw9a', true, 'Garik', 'Asatryan', '1996-12-30', '666666666'),
+       ('paula@email.com', '$2a$12$jKTxYa0fSqWzb2UrhHxR8uDn5/ArJrh4VQ1zNxJHCU7.LsZmEUE/.', true, 'Paula', 'Martín', '1995-08-24', '777777777'),
+       ('nacho@email.com', '$2a$12$hE8vq6Ng0aKvV60dpP8gRecFR5fT5G7mTjP61ZnnjIOAa2n0mbDjC', true, 'Nacho', 'Muñoz', '1996-01-27', '676767676');
 
 INSERT IGNORE INTO roles (name)
 VALUES ('ADMIN'),
@@ -11,7 +10,8 @@ VALUES ('ADMIN'),
 
 INSERT IGNORE INTO user_role (user_id, role_id)
 VALUES (1, 1),
-       (2, 2);
+       (2, 2),
+       (3, 3);
 
 INSERT IGNORE INTO ticket_types (name, price, stock_total, stock_available)
 VALUES ('Senda del Guerrero (Abono General)', 95.00, 5000, 5000),
@@ -27,17 +27,17 @@ VALUES ('Sombra de Yggdrasil (Camping Sombra)', 30.00, 500, 500),
        ('Drakkar sobre Ruedas (Zona Caravanas)', 80.00, 100, 100);
 
 
-INSERT INTO sponsors (name, phone, email, contribution, image)
-VALUES ('Cruzcampo', '+34 954 979 000', 'sponsorship@heinekenespana.es', 60000.00, 'cruzcampo_logo.png'),
-       ('Thomann Music', '+49 9546 9223', 'export@thomann.de', 25000.00, 'thomann_logo.png'),
-       ('EMP Mailorder', '+34 911 875 528', 'marketing@emp-online.es', 20000.00, 'emp_logo.png'),
-       ('Monster Energy', '+1 800 426 737', 'info@monsterenergy.com', 45000.00, 'monster_logo.png'),
-       ('Jägermeister', '+49 5331 810', 'espana@jaegermeister.de', 30000.00, 'jaegermeister_logo.png'),
-       ('Marshall Amplification', '+44 1908 375411', 'sponsorship@marshall.com', 15000.00, 'marshall_logo.png'),
-       ('Jack Daniels', '+1 888 551 5225', 'events@jackdaniels.com', 28000.00, 'jackdaniels_logo.png'),
-       ('Estrella Galicia', '+34 981 901 906', 'patrocinios@estrellagalicia.es', 35000.00, 'estrella_galicia_logo.png'),
-       ('Vans España', '+34 932 203 100', 'marketing@vans.es', 18000.00, 'vans_logo.png'),
-       ('Fnac España', '+34 902 100 632', 'comunicacion@fnac.es', 12000.00, 'fnac_logo.png');
+INSERT INTO sponsors (name, phone, email, contribution)
+VALUES ('Cruzcampo', '+34 954 979 000', 'sponsorship@heinekenespana.es', 60000.00),
+       ('Thomann Music', '+49 9546 9223', 'export@thomann.de', 25000.00),
+       ('EMP Mailorder', '+34 911 875 528', 'marketing@emp-online.es', 20000.00),
+       ('Monster Energy', '+1 800 426 737', 'info@monsterenergy.com', 45000.00),
+       ('Jägermeister', '+49 5331 810', 'espana@jaegermeister.de', 30000.00),
+       ('Marshall Amplification', '+44 1908 375411', 'sponsorship@marshall.com', 15000.00),
+       ('Jack Daniels', '+1 888 551 5225', 'events@jackdaniels.com', 28000.00),
+       ('Estrella Galicia', '+34 981 901 906', 'patrocinios@estrellagalicia.es', 35000.00),
+       ('Vans España', '+34 932 203 100', 'marketing@vans.es', 18000.00),
+       ('Fnac España', '+34 902 100 632', 'comunicacion@fnac.es', 12000.00);
 
 INSERT INTO stages (name, capacity)
 VALUES ('Asgard del Sur', 15000),
@@ -94,8 +94,7 @@ VALUES ('Gojira', '+33 1 42 67 00 00', 'contact@gojira-music.com', 'Progressive 
        ('Alcest', '+33 4 91 12 34 56', 'alcest.band@gmail.com', 'Blackgaze', 'France'),
        ('Acid Bath', '+1 504 555 0122', 'acidbath@rotten.com', 'Sludge Metal', 'USA'),
        ('Meshuggah', '+46 90 123 45 67', 'meshuggah@management.se', 'Extreme Progressive Metal', 'Sweden'),
-       ('Derby Motoretas Burrito Kachimba', '+34 954 12 34 56', 'kinkidelia@derbymotoretas.com', 'Psychedelic Rock',
-        'Spain'),
+       ('Derby Motoretas Burrito Kachimba', '+34 954 12 34 56', 'kinkidelia@derbymotoretas.com', 'Psychedelic Rock', 'Spain'),
        ('Limp Bizkit', '+1 904 555 0100', 'bizkit.mgmt@gmail.com', 'Nu Metal', 'USA'),
        ('Slaughter to Prevail', '+7 495 123 45 67', 'alex.terrible@stp.com', 'Deathcore', 'Russia'),
        ('Leprous', '+47 35 55 66 77', 'management@leprous.net', 'Progressive Rock', 'Norway'),

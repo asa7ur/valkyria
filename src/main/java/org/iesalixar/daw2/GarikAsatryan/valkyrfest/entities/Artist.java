@@ -15,8 +15,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "performances")
-@EqualsAndHashCode(exclude = "performances")
+@ToString(exclude = {"performances", "images"})
+@EqualsAndHashCode(exclude = {"performances", "images"})
 public class Artist {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +48,12 @@ public class Artist {
     @Column(name = "country", nullable = false, length = 100)
     private String country;
 
+    @Column(name = "logo")
+    private String logo;
+
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Performance> performances = new ArrayList<>();
+
+    @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ArtistImage> images = new ArrayList<>();
 }
