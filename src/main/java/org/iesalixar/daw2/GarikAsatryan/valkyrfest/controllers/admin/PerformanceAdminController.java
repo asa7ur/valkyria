@@ -3,6 +3,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyrfest.controllers.admin;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.entities.Performance;
+import org.iesalixar.daw2.GarikAsatryan.valkyrfest.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.ArtistService;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.PerformanceService;
 import org.iesalixar.daw2.GarikAsatryan.valkyrfest.services.StageService;
@@ -86,10 +87,19 @@ public class PerformanceAdminController {
             return "admin/performances/form";
         }
 
-        performanceService.savePerformance(performance);
+        try {
+            performanceService.savePerformance(performance);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    messageSource.getMessage("msg.admin.performance.save.success", null, LocaleContextHolder.getLocale()));
+        } catch (AppException e) {
+            result.rejectValue("startTime", "error.performance",
+                    messageSource.getMessage(e.getMessage(), null, LocaleContextHolder.getLocale()));
 
-        redirectAttributes.addFlashAttribute("successMessage",
-                messageSource.getMessage("msg.admin.performance.save.success", null, LocaleContextHolder.getLocale()));
+            model.addAttribute("artists", artistService.getAllArtists());
+            model.addAttribute("stages", stageService.getAllStages());
+            model.addAttribute("activePage", "performances");
+            return "admin/performances/form";
+        }
 
         return "redirect:/admin/festival/performances";
     }
