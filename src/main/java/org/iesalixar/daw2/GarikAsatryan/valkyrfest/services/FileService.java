@@ -46,9 +46,9 @@ public class FileService {
 
         // 2. Save Thumbnail Version (Small)
         Thumbnails.of(file.getInputStream())
-                .size(300, 300)
+                .size(600, 600)
                 .outputFormat("webp")
-                .outputQuality(0.70)
+                .outputQuality(0.80)
                 .toFile(uploadPath.resolve(baseName + THUMB_SUFFIX).toFile());
 
         // Return the baseName so the database only stores one ID
