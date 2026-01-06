@@ -73,6 +73,13 @@ public class SecurityConfig {
                         // Cualquier otra petición requiere estar autenticado
                         .anyRequest().authenticated()
                 )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("http://localhost:4200")
+                        .deleteCookies("jwt")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 

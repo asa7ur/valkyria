@@ -52,15 +52,22 @@ public class AuthController {
         Cookie jwtCookie = new Cookie("jwt", jwt);
         jwtCookie.setHttpOnly(true);
         jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(24 * 60 * 60); // 1 día de duración
-        // jwtCookie.setSecure(true); // Descomentar en producción (HTTPS)
+        jwtCookie.setMaxAge(24 * 60 * 60);
         response.addCookie(jwtCookie);
 
-        // 4. Responder a Angular con el JSON esperado
+        // --- NUEVA LÓGICA DE REDIRECCIÓN ---
+        boolean isAdminOrManager = userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
+
+        // Definimos la URL de redirección: si es admin va a 8080, si no se queda en Angular
+        String redirectUrl = isAdminOrManager ? "http://localhost:8080/admin/dashboard" : "http://localhost:4200/";
+
+        // 4. Responder a Angular con el JSON esperado incluyendo la redirectUrl
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("token", jwt);
         responseBody.put("username", userDetails.getUsername());
         responseBody.put("roles", userDetails.getAuthorities());
+        responseBody.put("redirectUrl", redirectUrl); // <--- Añadimos este campo
 
         return ResponseEntity.ok(responseBody);
     }
