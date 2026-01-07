@@ -62,4 +62,10 @@ public class GlobalExceptionHandler {
         // Para admin, dejamos que Spring maneje el error 500 estándar (o tu página de error/500.html)
         throw new RuntimeException(ex);
     }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Void> handleResourceNotFound() {
+        // Devuelve un 404 limpio sin trazas de error en la consola
+        return ResponseEntity.notFound().build();
+    }
 }
