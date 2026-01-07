@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.CampingOrderDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.OrderRequestDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.OrderResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.TicketOrderDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
@@ -77,18 +78,6 @@ public class OrderService {
             }
         }
         return total;
-    }
-
-    public void removeTicket(OrderRequestDTO request, int index) {
-        if (request.getTickets() != null && index >= 0 && index < request.getTickets().size()) {
-            request.getTickets().remove(index);
-        }
-    }
-
-    public void removeCamping(OrderRequestDTO request, int index) {
-        if (request.getCampings() != null && index >= 0 && index < request.getCampings().size()) {
-            request.getCampings().remove(index);
-        }
     }
 
     @Transactional
@@ -174,5 +163,44 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + orderId));
         order.setStatus(OrderStatus.PAID);
         return orderRepository.save(order);
+    }
+
+    public List<OrderResponseDTO> getOrdersByUserDTO(String email) {
+        List<Order> orders = orderRepository.findByUserEmailOrderByOrderDateDesc(email);
+        return orders.stream()
+                .map(this::convertToDTO)
+                .toList();
+    }
+
+    private OrderResponseDTO convertToDTO(Order order) {
+        OrderResponseDTO dto = new OrderResponseDTO();
+        dto.setId(order.getId());
+        dto.setOrderDate(order.getOrderDate());
+        dto.setTotalPrice(order.getTotalPrice());
+        dto.setStatus(order.getStatus());
+
+        dto.setTickets(order.getTickets().stream().map(t -> {
+            TicketOrderDTO tDto = new TicketOrderDTO();
+            tDto.setFirstName(t.getFirstName());
+            tDto.setLastName(t.getLastName());
+            tDto.setDocumentType(t.getDocumentType());
+            tDto.setDocumentNumber(t.getDocumentNumber());
+            tDto.setBirthDate(t.getBirthDate());
+            tDto.setTicketTypeId(t.getTicketType().getId());
+            return tDto;
+        }).toList());
+
+        dto.setCampings(order.getCampings().stream().map(c -> {
+            CampingOrderDTO cDto = new CampingOrderDTO();
+            cDto.setFirstName(c.getFirstName());
+            cDto.setLastName(c.getLastName());
+            cDto.setDocumentType(c.getDocumentType());
+            cDto.setDocumentNumber(c.getDocumentNumber());
+            cDto.setBirthDate(c.getBirthDate());
+            cDto.setCampingTypeId(c.getCampingType().getId());
+            return cDto;
+        }).toList());
+
+        return dto;
     }
 }
