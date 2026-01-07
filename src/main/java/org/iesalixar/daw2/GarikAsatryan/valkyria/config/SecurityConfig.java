@@ -65,7 +65,16 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         // Permitimos el acceso a la API y recursos estáticos
-                        .requestMatchers("/", "/register/**", "/login", "/css/**", "/js/**", "/images/**", "/uploads/**", "/stripe/**", "/api/**").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/api/**",
+                                "/register/**",
+                                "/login",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/uploads/**",
+                                "/stripe/**").permitAll()
 
                         // Protegemos explícitamente la zona de administración de Thymeleaf
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
