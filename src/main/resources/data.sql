@@ -362,11 +362,13 @@ VALUES ('2026-08-05 18:30:00', '2026-08-05 19:30:00', 54, 2), -- Wheel
 
 -- Escenario: Fenrir del Al-Andalus (Extreme)
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-05 20:00:00', '2026-08-05 21:00:00', 43, 3), -- Slaughter to Prevail
-       ('2026-08-05 21:30:00', '2026-08-05 22:45:00', 8, 3),  -- Lorna Shore
-       ('2026-08-05 23:30:00', '2026-08-06 01:00:00', 6, 3),  -- Behemoth
-       ('2026-08-06 01:30:00', '2026-08-06 02:45:00', 50, 3);
--- Batushka
+VALUES ('2026-08-05 18:30:00', '2026-08-05 19:45:00', 50, 3), -- Batushka
+       ('2026-08-05 20:15:00', '2026-08-05 21:30:00', 17, 3), -- Deafheaven
+       ('2026-08-05 21:45:00', '2026-08-05 23:00:00', 43, 3), -- Slaughter to Prevail
+       ('2026-08-05 23:30:00', '2026-08-06 00:45:00', 8, 3),  -- Lorna Shore
+       ('2026-08-06 01:00:00', '2026-08-06 02:15:00', 6, 3);
+-- Behemoth
+
 
 -- Escenario: Drakkar de Guadalquivir (Español & Latam)
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
