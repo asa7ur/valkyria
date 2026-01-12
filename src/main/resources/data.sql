@@ -44,9 +44,9 @@ VALUES ('Cruzcampo', '+34 954 979 000', 'sponsorship@heinekenespana.es', 60000.0
 
 INSERT INTO stages (name, capacity)
 VALUES ('Asgard del Sur', 15000),
+       ('Valhalla de Triana', 10000),
        ('Fenrir del Al-Ándalus', 8000),
-       ('Drakkar de Guadalquivir', 5000),
-       ('Valhalla de Triana', 10000);
+       ('Drakkar de Guadalquivir', 5000);
 
 INSERT INTO sponsor_stage (sponsor_id, stage_id)
 VALUES (1, 1),
@@ -259,7 +259,59 @@ VALUES ('Gojira', '+33 1 42 67 00 00', 'contact@gojira-music.com', 'Progressive 
        ('Three Days Grace', '+1 416 555 0177', 'info@threedaysgrace.com', 'Alternative Rock', 'Canada', NULL, NULL,
         NULL, NULL, NULL, NULL, NULL, NULL),
        ('Iron Maiden', '+44 20 8946 0000', 'phantom@ironmaiden.com', 'Heavy Metal', 'UK', NULL, NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL);
+        NULL, NULL, NULL),
+       ('Wheel', '+358 40 123 4567', 'management@wheelband.net', 'Progressive Metal', 'Finland', NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL),
+       ('Haken', '+44 20 7946 0123', 'info@hakenmusic.com', 'Progressive Metal', 'United Kingdom', NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL),
+       ('Sleep Token', '+44 20 8123 4567', 'ritual@sleep-token.com', 'Alternative Metal', 'United Kingdom', NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Arch Enemy', '+46 8 123 456 78', 'contact@archenemy.net', 'Melodic Death Metal', 'Sweden', NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL),
+       ('Cattle Decapitation', '+1 619 555 0199', 'booking@cattledecapitation.com', 'Deathgrind', 'USA', NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Cannibal Corpse', '+1 813 555 0144', 'info@cannibalcorpse.net', 'Death Metal', 'USA', NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL),
+       ('Mayhem', '+47 22 12 34 56', 'order@thetruemayhem.com', 'Black Metal', 'Norway', NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL),
+       ('Porcupine Tree', '+44 161 496 0234', 'info@porcupinetree.com', 'Progressive Rock', 'United Kingdom', NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+       ('A Day to Remember', '+1 352 555 0120', 'management@adtr.com', 'Metalcore', 'USA', NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL),
+       ('Bala', '+34 600 000 000', 'balaband@gmail.com', 'Grunge/Stoner Rock', 'Spain', NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL),
+       ('A.N.I.M.A.L.', '+54 11 4321 0000', 'prensa@animal.com.ar', 'Groove Metal', 'Argentina', NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL),
+       ('Sôber', '+34 912 000 000', 'contratacion@soberweb.com', 'Alternative Metal', 'Spain', NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL),
+       ('Molotov', '+52 55 5123 4567', 'contacto@molotov.com.mx', 'Rap Rock', 'Mexico', NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL),
+       ('Biznaga', '+34 611 222 333', 'biznagapunk@gmail.com', 'Punk Rock', 'Spain', NULL, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL),
+       ('Diamante Eléctrico', '+57 310 123 4567', 'info@diamanteelectrico.com', 'Indie Rock', 'Colombia', NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Hamlet', '+34 913 444 555', 'info@hamlet1.com', 'Alternative Metal', 'Spain', NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL),
+       ('Angelus Apatrida', '+34 967 111 222', 'management@angelusapatrida.com', 'Thrash Metal', 'Spain', NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL),
+       ('El Cuarteto de Nos', '+598 2 900 0000', 'info@cuartetodenos.com.uy', 'Alternative Rock', 'Uruguay', NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Mon Laferte', '+56 2 2123 4567', 'contacto@monlaferte.com', 'Alternative Pop/Rock', 'Chile', NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL),
+       ('Bunbury', '+34 910 888 777', 'oficina@enriquebunbury.com', 'Rock', 'Spain', NULL, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL),
+       ('Fito & Fitipaldis', '+34 944 000 111', 'info@fitoyfitipaldis.com', 'Rock and Roll', 'Spain', NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL),
+       ('Soziedad Alkoholika', '+34 945 123 456', 'info@soziedadalkoholika.com', 'Thrash Metal/Crossover', 'Spain',
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Toundra', '+34 655 444 333', 'toundraband@gmail.com', 'Post-Rock', 'Spain', NULL, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL),
+       ('Babasónicos', '+54 11 4777 8888', 'management@babasonicos.com', 'Alternative Rock', 'Argentina', NULL, NULL,
+        NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Vetusta Morla', '+34 918 222 333', 'info@vetustamorla.com', 'Indie Rock', 'Spain', NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL),
+       ('Ska-P', '+34 915 666 777', 'contratacion@ska-p.com', 'Ska Punk', 'Spain', NULL, NULL, NULL, NULL, NULL, NULL,
+        NULL, NULL);
 
 INSERT INTO artist_images (image_url, artist_id)
 VALUES ('08879063-dc9f-42aa-bb1f-c48ccdc4a6a5', 1),
@@ -291,113 +343,138 @@ VALUES ('08879063-dc9f-42aa-bb1f-c48ccdc4a6a5', 1),
        ('2bf57511-4f81-4777-b95f-af034dbcdc6f', 26);
 
 -- MIÉRCOLES 5 DE AGOSTO DE 2026
--- Escenario: Asgard del Sur
+-- Escenario: Asgard del Sur (Mainstream/Headliners)
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
 VALUES ('2026-08-05 19:00:00', '2026-08-05 20:00:00', 52, 1), -- Three Days Grace
        ('2026-08-05 20:30:00', '2026-08-05 21:45:00', 13, 1), -- Evanescence
-       ('2026-08-05 22:30:00', '2026-08-06 00:30:00', 11, 1), -- Metallica (Headliner)
+       ('2026-08-05 22:30:00', '2026-08-06 00:30:00', 11, 1), -- Metallica
        ('2026-08-06 01:15:00', '2026-08-06 02:30:00', 42, 1);
 -- Limp Bizkit
 
--- Escenario: Valhalla de Triana
+-- Escenario: Valhalla de Triana (Prog/Alt)
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-05 19:30:00', '2026-08-05 20:30:00', 44, 4), -- Leprous
-       ('2026-08-05 21:00:00', '2026-08-05 22:15:00', 23, 4), -- Soen
-       ('2026-08-05 23:00:00', '2026-08-06 00:30:00', 14, 4), -- Tool
-       ('2026-08-06 01:00:00', '2026-08-06 02:15:00', 24, 4);
+VALUES ('2026-08-05 18:30:00', '2026-08-05 19:30:00', 54, 2), -- Wheel
+       ('2026-08-05 19:45:00', '2026-08-05 20:45:00', 44, 2), -- Leprous
+       ('2026-08-05 21:15:00', '2026-08-05 22:30:00', 23, 2), -- Soen
+       ('2026-08-05 23:15:00', '2026-08-06 00:45:00', 14, 2), -- Tool
+       ('2026-08-06 01:15:00', '2026-08-06 02:30:00', 24, 2);
 -- Igorrr
 
--- Escenario: Fenrir del al-andalus
+-- Escenario: Fenrir del Al-Andalus (Extreme)
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-05 20:00:00', '2026-08-05 21:00:00', 43, 2), -- Slaughter to Prevail
-       ('2026-08-05 21:30:00', '2026-08-05 22:45:00', 8, 2),  -- Lorna Shore
-       ('2026-08-05 23:30:00', '2026-08-06 01:00:00', 6, 2),  -- Behemoth
-       ('2026-08-06 01:30:00', '2026-08-06 02:45:00', 50, 2);
+VALUES ('2026-08-05 20:00:00', '2026-08-05 21:00:00', 43, 3), -- Slaughter to Prevail
+       ('2026-08-05 21:30:00', '2026-08-05 22:45:00', 8, 3),  -- Lorna Shore
+       ('2026-08-05 23:30:00', '2026-08-06 01:00:00', 6, 3),  -- Behemoth
+       ('2026-08-06 01:30:00', '2026-08-06 02:45:00', 50, 3);
 -- Batushka
+
+-- Escenario: Drakkar de Guadalquivir (Español & Latam)
+INSERT INTO performances (start_time, end_time, artist_id, stage_id)
+VALUES ('2026-08-05 19:00:00', '2026-08-05 20:00:00', 63, 4), -- Bala
+       ('2026-08-05 20:30:00', '2026-08-05 21:45:00', 64, 4), -- A.N.I.M.A.L.
+       ('2026-08-05 22:15:00', '2026-08-05 23:30:00', 65, 4), -- Sôber
+       ('2026-08-06 00:00:00', '2026-08-06 01:30:00', 66, 4);
+-- Molotov
 
 -- JUEVES 6 DE AGOSTO DE 2026
 -- Escenario: Asgard del Sur
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
 VALUES ('2026-08-06 19:00:00', '2026-08-06 20:00:00', 19, 1), -- Pantera
        ('2026-08-06 20:30:00', '2026-08-06 21:45:00', 18, 1), -- Judas Priest
-       ('2026-08-06 22:30:00', '2026-08-07 00:30:00', 53, 1), -- Iron Maiden (Headliner)
+       ('2026-08-06 22:30:00', '2026-08-07 00:30:00', 53, 1), -- Iron Maiden
        ('2026-08-07 01:15:00', '2026-08-07 02:30:00', 30, 1);
 -- Sepultura
 
 -- Escenario: Valhalla de Triana
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-06 19:30:00', '2026-08-06 20:30:00', 12, 4), -- Mastodon
-       ('2026-08-06 21:00:00', '2026-08-06 22:15:00', 1, 4),  -- Gojira
-       ('2026-08-06 23:00:00', '2026-08-07 00:30:00', 9, 4),  -- Opeth
-       ('2026-08-07 01:00:00', '2026-08-07 02:15:00', 40, 4);
+VALUES ('2026-08-06 18:30:00', '2026-08-06 19:30:00', 55, 2), -- Haken
+       ('2026-08-06 19:45:00', '2026-08-06 20:45:00', 12, 2), -- Mastodon
+       ('2026-08-06 21:15:00', '2026-08-06 22:30:00', 1, 2),  -- Gojira
+       ('2026-08-06 23:00:00', '2026-08-07 00:30:00', 9, 2),  -- Opeth
+       ('2026-08-07 01:00:00', '2026-08-07 02:15:00', 40, 2);
 -- Meshuggah
 
--- Escenario: Fenrir del al-andalus
+-- Escenario: Fenrir del Al-Andalus
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-06 20:00:00', '2026-08-06 21:00:00', 7, 2),  -- Fit For An Autopsy
-       ('2026-08-06 21:30:00', '2026-08-06 22:45:00', 15, 2), -- Whitechapel
-       ('2026-08-06 23:30:00', '2026-08-07 01:00:00', 46, 2), -- Lamb of God
-       ('2026-08-07 01:30:00', '2026-08-07 02:45:00', 47, 2);
+VALUES ('2026-08-06 20:00:00', '2026-08-06 21:00:00', 7, 3),  -- Fit For An Autopsy
+       ('2026-08-06 21:30:00', '2026-08-06 22:45:00', 15, 3), -- Whitechapel
+       ('2026-08-06 23:30:00', '2026-08-07 01:00:00', 46, 3), -- Lamb of God
+       ('2026-08-07 01:30:00', '2026-08-07 02:45:00', 47, 3);
 -- Knocked Loose
 
 -- Escenario: Drakkar de Guadalquivir
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-06 20:00:00', '2026-06-08 21:00:00', 36, 3), -- Jutes
-       ('2026-08-06 21:30:00', '2026-06-08 22:45:00', 33, 3), -- Amira Elfeky
-       ('2026-08-06 23:30:00', '2026-07-08 01:00:00', 22, 3);
--- Allt
+VALUES ('2026-08-06 19:00:00', '2026-08-06 20:00:00', 67, 4), -- Biznaga
+       ('2026-08-06 20:30:00', '2026-08-06 21:30:00', 68, 4), -- Diamante Eléctrico
+       ('2026-08-06 22:00:00', '2026-08-06 23:15:00', 69, 4), -- Hamlet
+       ('2026-08-06 23:45:00', '2026-08-07 01:15:00', 70, 4), -- Angelus Apatrida
+       ('2026-08-07 01:30:00', '2026-08-07 02:45:00', 71, 4);
+-- El Cuarteto de Nos
 
 -- VIERNES 7 DE AGOSTO DE 2026
 -- Escenario: Asgard del Sur
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-07 19:00:00', '2026-08-07 20:00:00', 51, 1), -- Bring Me The Horizon
+VALUES ('2026-08-07 19:00:00', '2026-08-07 20:00:00', 51, 1), -- BMTH
        ('2026-08-07 20:30:00', '2026-08-07 21:45:00', 49, 1), -- Ghost
-       ('2026-08-07 22:30:00', '2026-08-08 00:30:00', 3, 1),  -- Rammstein (Headliner)
+       ('2026-08-07 22:30:00', '2026-08-08 00:30:00', 3, 1),  -- Rammstein
        ('2026-08-08 01:15:00', '2026-08-08 02:30:00', 35, 1);
 -- Bad Omens
 
 -- Escenario: Valhalla de Triana
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-07 19:30:00', '2026-08-07 20:30:00', 32, 4), -- Spiritbox
-       ('2026-08-07 21:00:00', '2026-08-07 22:15:00', 10, 4), -- Jinjer
-       ('2026-08-07 23:00:00', '2026-08-08 00:30:00', 5, 4),  -- Deftones
-       ('2026-08-08 01:00:00', '2026-08-08 02:15:00', 34, 4);
+VALUES ('2026-08-07 18:00:00', '2026-08-07 19:00:00', 56, 2), -- Sleep Token
+       ('2026-08-07 19:30:00', '2026-08-07 20:30:00', 32, 2), -- Spiritbox
+       ('2026-08-07 21:00:00', '2026-08-07 22:15:00', 10, 2), -- Jinjer
+       ('2026-08-07 23:00:00', '2026-08-08 00:30:00', 5, 2),  -- Deftones
+       ('2026-08-08 01:00:00', '2026-08-08 02:15:00', 34, 2);
 -- HEALTH
+
+-- Escenario: Fenrir del Al-Andalus
+INSERT INTO performances (start_time, end_time, artist_id, stage_id)
+VALUES ('2026-08-07 19:30:00', '2026-08-07 20:30:00', 57, 3), -- Arch Enemy
+       ('2026-08-07 21:00:00', '2026-08-07 22:15:00', 58, 3), -- Cattle Decapitation
+       ('2026-08-07 23:00:00', '2026-08-08 00:30:00', 59, 3), -- Cannibal Corpse
+       ('2026-08-08 01:00:00', '2026-08-08 02:15:00', 60, 3);
+-- Mayhem
 
 -- Escenario: Drakkar de Guadalquivir
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-07 19:00:00', '2026-08-07 20:00:00', 41, 3), -- Derby Motoreta's Burrito Kachimba
-       ('2026-08-07 20:30:00', '2026-08-07 21:30:00', 20, 3), -- Danheim
-       ('2026-08-07 22:00:00', '2026-08-07 23:30:00', 21, 3), -- Wardruna
-       ('2026-08-08 00:00:00', '2026-08-08 01:15:00', 4, 3);
--- Faetooth
+VALUES ('2026-08-07 18:30:00', '2026-08-07 19:30:00', 41, 4), -- Derby Motoreta's
+       ('2026-08-07 20:00:00', '2026-08-07 21:15:00', 72, 4), -- Mon Laferte
+       ('2026-08-07 22:00:00', '2026-08-07 23:30:00', 73, 4), -- Bunbury
+       ('2026-08-08 00:00:00', '2026-08-08 01:30:00', 74, 4), -- Fito & Fitipaldis
+       ('2026-08-08 01:45:00', '2026-08-08 03:00:00', 75, 4);
+-- Soziedad Alkoholika
 
 -- SÁBADO 8 DE AGOSTO DE 2026
 -- Escenario: Asgard del Sur
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
 VALUES ('2026-08-08 19:00:00', '2026-08-08 20:15:00', 29, 1), -- Alice in Chains
        ('2026-08-08 21:00:00', '2026-08-08 22:30:00', 28, 1), -- Slipknot
-       ('2026-08-08 23:30:00', '2026-08-09 01:30:00', 26, 1);
--- Linkin Park (Headliner)
+       ('2026-08-08 23:30:00', '2026-08-09 01:30:00', 26, 1), -- Linkin Park
+       ('2026-08-09 01:45:00', '2026-08-09 03:00:00', 62, 1);
+-- A Day To Remember
 
 -- Escenario: Valhalla de Triana
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-08 19:30:00', '2026-08-08 20:30:00', 31, 4), -- Periphery
-       ('2026-08-08 21:00:00', '2026-08-08 22:15:00', 16, 4), -- VOLA
-       ('2026-08-08 23:00:00', '2026-08-09 00:30:00', 25, 4);
--- Devin Townsend
+VALUES ('2026-08-08 18:15:00', '2026-08-08 19:15:00', 31, 2), -- Periphery
+       ('2026-08-08 19:45:00', '2026-08-08 20:45:00', 16, 2), -- VOLA
+       ('2026-08-08 21:15:00', '2026-08-08 22:30:00', 25, 2), -- Devin Townsend
+       ('2026-08-08 23:15:00', '2026-08-09 00:45:00', 61, 2), -- Porcupine Tree
+       ('2026-08-09 01:15:00', '2026-08-09 02:30:00', 2, 2);
+-- Loathe
 
--- Escenario: Fenrir del al-andalus
+-- Escenario: Fenrir del Al-Andalus
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-08 20:00:00', '2026-08-08 21:00:00', 48, 2), -- Bambie Thug
-       ('2026-08-08 21:30:00', '2026-08-08 22:30:00', 45, 2), -- Poppy
-       ('2026-08-08 23:00:00', '2026-08-09 00:15:00', 2, 2),  -- Loathe
-       ('2026-08-09 01:00:00', '2026-08-09 02:15:00', 27, 2);
--- Imperial Triumphant
+VALUES ('2026-08-08 20:00:00', '2026-08-08 21:00:00', 48, 3), -- Bambie Thug
+       ('2026-08-08 21:30:00', '2026-08-08 22:30:00', 45, 3), -- Poppy
+       ('2026-08-08 23:15:00', '2026-08-09 00:30:00', 27, 3), -- Imperial Triumphant
+       ('2026-08-09 01:00:00', '2026-08-09 02:15:00', 39, 3);
+-- Acid Bath
 
 -- Escenario: Drakkar de Guadalquivir
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
-VALUES ('2026-08-08 20:30:00', '2026-08-08 21:30:00', 37, 3), -- In Mourning
-       ('2026-08-08 22:00:00', '2026-08-08 23:15:00', 38, 3), -- Alcest
-       ('2026-08-08 23:45:00', '2026-08-09 01:00:00', 17, 3), -- Deafheaven
-       ('2026-08-09 01:30:00', '2026-08-09 02:30:00', 39, 3); -- Acid Bath
+VALUES ('2026-08-08 19:00:00', '2026-08-08 20:00:00', 76, 4), -- Toundra
+       ('2026-08-08 20:30:00', '2026-08-08 21:45:00', 77, 4), -- Babasónicos
+       ('2026-08-08 22:15:00', '2026-08-08 23:45:00', 78, 4), -- Vetusta Morla
+       ('2026-08-09 00:15:00', '2026-08-09 01:45:00', 79, 4); -- Ska-P
