@@ -268,7 +268,7 @@ VALUES ('Gojira', '+33 1 42 67 00 00', 'contact@gojira-music.com', 'Progressive 
         NULL, NULL, NULL, NULL, NULL, NULL),
        ('Arch Enemy', '+46 8 123 456 78', 'contact@archenemy.net', 'Melodic Death Metal', 'Sweden', NULL, NULL, NULL,
         NULL, NULL, NULL, NULL, NULL),
-       ('Cattle Decapitation', '+1 619 555 0199', 'booking@cattledecapitation.com', 'Deathgrind', 'USA', NULL, NULL,
+       ('Power Trip', '+1-214-555-0198', 'booking@powertrip.band', 'Crossover Thrash', 'USA', NULL, NULL,
         NULL, NULL, NULL, NULL, NULL, NULL),
        ('Cannibal Corpse', '+1 813 555 0144', 'info@cannibalcorpse.net', 'Death Metal', 'USA', NULL, NULL, NULL, NULL,
         NULL, NULL, NULL, NULL),
@@ -432,7 +432,7 @@ VALUES ('2026-08-07 18:00:00', '2026-08-07 19:00:00', 56, 2), -- Sleep Token
 -- Escenario: Fenrir del Al-Andalus
 INSERT INTO performances (start_time, end_time, artist_id, stage_id)
 VALUES ('2026-08-07 19:30:00', '2026-08-07 20:30:00', 57, 3), -- Arch Enemy
-       ('2026-08-07 21:00:00', '2026-08-07 22:15:00', 58, 3), -- Cattle Decapitation
+       ('2026-08-07 21:00:00', '2026-08-07 22:15:00', 58, 3), -- Power Trip
        ('2026-08-07 23:00:00', '2026-08-08 00:30:00', 59, 3), -- Cannibal Corpse
        ('2026-08-08 01:00:00', '2026-08-08 02:15:00', 60, 3);
 -- Mayhem
