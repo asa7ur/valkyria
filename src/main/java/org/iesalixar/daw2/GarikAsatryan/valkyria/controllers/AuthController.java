@@ -4,7 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.UserRegistrationDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.security.JwtService;

@@ -1,8 +1,8 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.OrderRequestDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.OrderResponseDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderRequestDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Order;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;

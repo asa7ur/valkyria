@@ -1,7 +1,7 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.PerformanceDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PerformanceDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.PerformanceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;

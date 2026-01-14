@@ -1,4 +1,4 @@
-package org.iesalixar.daw2.GarikAsatryan.valkyria.dto;
+package org.iesalixar.daw2.GarikAsatryan.valkyria.dtos;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;

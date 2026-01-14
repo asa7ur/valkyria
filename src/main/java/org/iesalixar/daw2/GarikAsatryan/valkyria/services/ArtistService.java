@@ -2,9 +2,9 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.ArtistDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.ArtistDetailDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.ArtistImageDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDetailDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistImageDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.ArtistImage;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.ArtistImageRepository;
@@ -79,7 +79,7 @@ public class ArtistService {
 
         Artist savedArtist = artistRepository.save(artistToSave);
 
-        if (imageFiles != null && imageFiles.length > 0) {
+        if (imageFiles != null) {
             for (MultipartFile file : imageFiles) {
                 if (!file.isEmpty()) {
                     String fileName = fileService.saveFile(file, ARTISTS_FOLDER);

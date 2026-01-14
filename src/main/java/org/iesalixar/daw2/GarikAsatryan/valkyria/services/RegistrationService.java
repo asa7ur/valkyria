@@ -2,7 +2,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.UserRegistrationDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Role;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;

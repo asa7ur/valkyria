@@ -2,9 +2,9 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.LineupArtistDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.PerformanceDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.StageDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.LineupArtistDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PerformanceDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.StageDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Performance;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.PerformanceRepository;

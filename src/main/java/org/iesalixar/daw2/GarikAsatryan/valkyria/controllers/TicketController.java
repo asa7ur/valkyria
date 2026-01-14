@@ -1,7 +1,7 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.TicketTypeDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.TicketTypeRepository;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;

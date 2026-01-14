@@ -2,7 +2,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.SponsorDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.SponsorDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Sponsor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.SponsorRepository;
 import org.springframework.data.domain.Page;

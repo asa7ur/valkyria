@@ -1,8 +1,8 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.ArtistDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dto.ArtistDetailDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDetailDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.ArtistService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
