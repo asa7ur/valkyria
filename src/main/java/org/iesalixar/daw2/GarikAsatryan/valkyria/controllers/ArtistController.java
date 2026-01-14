@@ -18,10 +18,10 @@ import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/v1/artists")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class ArtistController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArtistController.class);
     private static final String ARTISTS_FOLDER = "artists";
 
     private final ArtistService artistService;
