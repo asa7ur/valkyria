@@ -12,5 +12,4 @@ public class CampingTypeDTO {
     private Long id;
     private String name;
     private BigDecimal price;
-    private Integer stockAvailable;
 }
