@@ -1,30 +1,43 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.mappers;
 
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistCreateDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDetailDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistImageDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.ArtistImage;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+import java.util.List;
+
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ArtistMapper {
+
     ArtistDTO toDTO(Artist artist);
 
     ArtistDetailDTO toDetailDTO(Artist artist);
 
-    Artist toEntity(ArtistDTO dto);
+    List<ArtistDTO> toDTOList(List<Artist> artists);
 
     @Mapping(target = "id", ignore = true)
-    Artist toEntity(ArtistCreateDTO createDTO);
+    @Mapping(target = "performances", ignore = true)
+    Artist toEntity(ArtistCreateDTO artistCreateDTO);
 
     @Mapping(target = "id", ignore = true)
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateArtistFromDto(ArtistCreateDTO dto, @MappingTarget Artist entity);
+    @Mapping(target = "performances", ignore = true)
+    void updateEntityFromDTO(ArtistCreateDTO dto, @MappingTarget Artist entity);
 
     ArtistImageDTO toImageDTO(ArtistImage artistImage);
 
     @Mapping(target = "artist", ignore = true)
+        // Importante para evitar recursión infinita
     ArtistImage toImageEntity(ArtistImageDTO artistImageDTO);
+
+    /**
+     * Este método asegura que cada imagen de la lista tenga la referencia
+     * al objeto Artist (la "parent side" de la relación).
+     */
+    @AfterMapping
+    default void linkImages(@MappingTarget Artist artist) {
+        if (artist.getImages() != null) {
+            artist.getImages().forEach(image -> image.setArtist(artist));
+        }
+    }
 }

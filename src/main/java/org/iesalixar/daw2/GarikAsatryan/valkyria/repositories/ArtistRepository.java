@@ -13,4 +13,8 @@ public interface ArtistRepository extends JpaRepository<Artist, Long> {
             "LOWER(a.genre) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
             "LOWER(a.country) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Artist> searchArtists(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    boolean existsByEmailAndIdNot(String email, Long id);
+
+    boolean existsByEmail(String email);
 }

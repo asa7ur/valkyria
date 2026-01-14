@@ -4,68 +4,104 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
     private final MessageSource messageSource;
 
     /**
-     * Captura las excepciones de tipo AppException.
-     * Si la petición es de la API, devuelve JSON.
-     * Si es de la administración, redirige con un mensaje flash.
+     * Captura errores de lógica de negocio (AppException).
+     * Angular recibirá un 400 Bad Request con el mensaje traducido.
      */
     @ExceptionHandler(AppException.class)
-    public Object handleAppException(AppException ex, HttpServletRequest request, RedirectAttributes redirectAttributes) {
-
-        // 1. Traducir el mensaje
+    public ResponseEntity<Map<String, Object>> handleAppException(AppException ex, HttpServletRequest request) {
         String errorMessage = messageSource.getMessage(
                 ex.getMessageKey(),
                 ex.getArgs(),
                 LocaleContextHolder.getLocale()
         );
 
-        // 2. ¿Es una petición de la API (Angular)?
-        if (request.getRequestURI().startsWith("/api/")) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", errorMessage,
-                    "key", ex.getMessageKey()
-            ));
-        }
-
-        // 3. Si es para el panel de Administración (Thymeleaf)
-        redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-        String referer = request.getHeader("Referer");
-
-        // Si no hay referer (petición directa), vamos al dashboard de admin
-        return "redirect:" + (referer != null ? referer : "/admin/dashboard");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(createErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                errorMessage,
+                ex.getMessageKey(),
+                request.getRequestURI()
+        ));
     }
 
     /**
-     * Captura excepciones generales para evitar que la API devuelva HTML en caso de error 500.
+     * Captura errores de validación (@Valid en los DTOs).
+     * Devuelve un mapa de campos y sus errores específicos.
      */
-    @ExceptionHandler(Exception.class)
-    public Object handleGeneralException(Exception ex, HttpServletRequest request) {
-        if (request.getRequestURI().startsWith("/api/")) {
-            return ResponseEntity.internalServerError().body(Map.of(
-                    "message", "Ocurrió un error inesperado en el servidor",
-                    "details", ex.getMessage()
-            ));
-        }
-        // Para admin, dejamos que Spring maneje el error 500 estándar (o tu página de error/500.html)
-        throw new RuntimeException(ex);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        Map<String, Object> response = createErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation Failed",
+                "msg.validation.error",
+                request.getRequestURI()
+        );
+        response.put("errors", errors);
+
+        return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
-    public ResponseEntity<Void> handleResourceNotFound() {
-        // Devuelve un 404 limpio sin trazas de error en la consola
-        return ResponseEntity.notFound().build();
+    /**
+     * Captura cuando no se encuentra un recurso (404).
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(NoResourceFoundException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Resource not found",
+                "msg.error.not-found",
+                request.getRequestURI()
+        ));
+    }
+
+    /**
+     * Captura cualquier otra excepción no controlada (500).
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(createErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "An unexpected error occurred",
+                "msg.error.internal-server",
+                request.getRequestURI()
+        ));
+    }
+
+    /**
+     * Método auxiliar para estandarizar la respuesta de error.
+     */
+    private Map<String, Object> createErrorResponse(int status, String message, String key, String path) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", status);
+        response.put("message", message);
+        response.put("key", key);
+        response.put("path", path);
+        return response;
     }
 }

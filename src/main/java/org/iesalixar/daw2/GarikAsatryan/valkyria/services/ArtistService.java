@@ -1,164 +1,203 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDetailDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistImageDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.ArtistImage;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.ArtistMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.ArtistImageRepository;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.ArtistRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ArtistService {
+    private static final Logger logger = LoggerFactory.getLogger(ArtistService.class);
 
     private final ArtistRepository artistRepository;
     private final ArtistImageRepository artistImageRepository;
+    private final ArtistMapper artistMapper;
+    private final MessageSource messageSource;
     private final FileService fileService;
 
     private static final String ARTISTS_FOLDER = "artists";
 
-    public List<Artist> getAllArtists() {
-        return artistRepository.findAll();
-    }
+    /**
+     * Obtiene una página de artistas, opcionalmente filtrada por nombre.
+     */
+    public Page<ArtistDTO> getAllArtists(String searchTerm, Pageable pageable) {
+        try {
+            logger.info("Buscando artistas con término: {}", searchTerm);
+            Page<Artist> artistPage;
 
-    public Optional<Artist> getArtistById(Long id) {
-        return artistRepository.findById(id);
-    }
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                artistPage = artistRepository.searchArtists(searchTerm, pageable);
+            } else {
+                artistPage = artistRepository.findAll(pageable);
+            }
 
-    public Page<Artist> getAllArtists(String searchTerm, Pageable pageable) {
-        if (searchTerm != null && !searchTerm.isEmpty()) {
-            return artistRepository.searchArtists(searchTerm, pageable);
+            return artistPage.map(artistMapper::toDTO);
+        } catch (Exception e) {
+            logger.error("Error al obtener la lista de artistas: {}", e.getMessage());
+            throw new RuntimeException("Error al obtener los artistas.", e);
         }
-        return artistRepository.findAll(pageable);
+    }
+
+    /**
+     * Obtiene el detalle completo de un artista por su ID.
+     */
+    public Optional<ArtistDetailDTO> getArtistById(Long id) {
+        try {
+            logger.info("Buscando detalle del artista con ID: {}", id);
+            return artistRepository.findById(id).map(artistMapper::toDetailDTO);
+        } catch (Exception e) {
+            logger.error("Error al buscar artista con ID {}: {}", id, e.getMessage());
+            throw new RuntimeException("Error al buscar el artista.", e);
+        }
+    }
+
+    /**
+     * Crea un nuevo artista verificando que el email no esté duplicado.
+     */
+    @Transactional
+    public ArtistDTO createArtist(ArtistCreateDTO artistCreateDTO, Locale locale) {
+        try {
+            if (artistRepository.existsByEmail(artistCreateDTO.getEmail())) {
+                throw new AppException("msg.artist.email-exists", artistCreateDTO.getEmail());
+            }
+
+            Artist artist = artistMapper.toEntity(artistCreateDTO);
+            Artist savedArtist = artistRepository.save(artist);
+            logger.info("Artista creado con éxito: {}", savedArtist.getName());
+            return artistMapper.toDTO(savedArtist);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error al crear artista: {}", e.getMessage());
+            throw new RuntimeException("No se pudo crear el artista.", e);
+        }
+    }
+
+    /**
+     * Actualiza un artista existente usando el Mapper para volcar los datos.
+     */
+    @Transactional
+    public ArtistDTO updateArtist(Long id, ArtistCreateDTO artistCreateDTO, Locale locale) {
+        try {
+            Artist existingArtist = artistRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("El artista no existe."));
+
+            // Validar si el nuevo email ya lo tiene otro artista distinto al actual
+            if (artistRepository.existsByEmailAndIdNot(artistCreateDTO.getEmail(), id)) {
+                String errorMessage = messageSource.getMessage("msg.artist.email-exists", null, locale);
+                throw new IllegalArgumentException(errorMessage);
+            }
+
+            // Usamos el mapper para actualizar la entidad existente
+            artistMapper.updateEntityFromDTO(artistCreateDTO, existingArtist);
+
+            Artist updatedArtist = artistRepository.save(existingArtist);
+            logger.info("Artista con ID {} actualizado correctamente", id);
+            return artistMapper.toDTO(updatedArtist);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error al actualizar artista con ID {}: {}", id, e.getMessage());
+            throw new RuntimeException("No se pudo actualizar el artista.", e);
+        }
     }
 
     @Transactional
-    public void saveArtist(Artist artist, MultipartFile logoFile, MultipartFile[] imageFiles) throws IOException {
-        Artist artistToSave;
-
-        if (artist.getId() != null) {
-            artistToSave = artistRepository.findById(artist.getId())
-                    .orElseThrow(() -> new RuntimeException("Artist not found"));
-
-            artistToSave.setName(artist.getName());
-            artistToSave.setPhone(artist.getPhone());
-            artistToSave.setEmail(artist.getEmail());
-            artistToSave.setGenre(artist.getGenre());
-            artistToSave.setCountry(artist.getCountry());
-            artistToSave.setDescription(artist.getDescription());
-            artistToSave.setOfficialUrl(artist.getOfficialUrl());
-            artistToSave.setInstagramUrl(artist.getInstagramUrl());
-            artistToSave.setTiktokUrl(artist.getTiktokUrl());
-            artistToSave.setYoutubeUrl(artist.getYoutubeUrl());
-            artistToSave.setTidalUrl(artist.getTidalUrl());
-            artistToSave.setSpotifyUrl(artist.getSpotifyUrl());
-
-        } else {
-            artistToSave = artist;
-        }
-
-        if (logoFile != null && !logoFile.isEmpty()) {
-            if (artistToSave.getLogo() != null) {
-                fileService.deleteFile(artistToSave.getLogo(), ARTISTS_FOLDER);
-            }
-            String logoName = fileService.saveFile(logoFile, ARTISTS_FOLDER);
-            artistToSave.setLogo(logoName);
-        }
-
-        Artist savedArtist = artistRepository.save(artistToSave);
-
-        if (imageFiles != null) {
-            for (MultipartFile file : imageFiles) {
-                if (!file.isEmpty()) {
-                    String fileName = fileService.saveFile(file, ARTISTS_FOLDER);
-                    ArtistImage artistImage = new ArtistImage();
-                    artistImage.setImageUrl(fileName);
-                    artistImage.setArtist(savedArtist);
-                    artistImageRepository.save(artistImage);
-                }
-            }
-        }
+    public void updateLogo(Long id, String baseName) {
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Artista no encontrado"));
+        artist.setLogo(baseName);
+        artistRepository.save(artist);
     }
 
-    public Optional<ArtistDetailDTO> getArtistDetailById(Long id) {
-        return artistRepository.findById(id).map(artist -> {
-            ArtistDetailDTO dto = new ArtistDetailDTO();
-            dto.setId(artist.getId());
-            dto.setName(artist.getName());
-            dto.setGenre(artist.getGenre());
-            dto.setCountry(artist.getCountry());
-            dto.setDescription(artist.getDescription());
-            dto.setLogo(artist.getLogo());
-            dto.setOfficialUrl(artist.getOfficialUrl());
-            dto.setInstagramUrl(artist.getInstagramUrl());
-            dto.setTiktokUrl(artist.getTiktokUrl());
-            dto.setYoutubeUrl(artist.getYoutubeUrl());
-            dto.setTidalUrl(artist.getTidalUrl());
-            dto.setSpotifyUrl(artist.getSpotifyUrl());
-
-            dto.setImages(artist.getImages().stream()
-                    .map(img -> new ArtistImageDTO(img.getId(), img.getImageUrl()))
-                    .collect(Collectors.toList()));
-            return dto;
-        });
-    }
-
+    /**
+     * Elimina un artista por su ID.
+     */
     @Transactional
     public void deleteArtist(Long id) {
-        artistRepository.findById(id).ifPresent(artist -> {
-            if (artist.getLogo() != null) fileService.deleteFile(artist.getLogo(), ARTISTS_FOLDER);
-            artist.getImages().forEach(img -> fileService.deleteFile(img.getImageUrl(), ARTISTS_FOLDER));
-            artistRepository.delete(artist);
-        });
+        try {
+            if (!artistRepository.existsById(id)) {
+                throw new AppException("msg.artist.not-found", id);
+            }
+            artistRepository.deleteById(id);
+            logger.info("Artista con ID {} eliminado", id);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error al eliminar artista con ID {}: {}", id, e.getMessage());
+            throw new RuntimeException("No se pudo eliminar el artista.", e);
+        }
     }
 
+    /**
+     * Elimina el logo de un artista tanto del sistema de archivos como de la base de datos.
+     */
     @Transactional
     public void deleteLogo(Long id) {
-        artistRepository.findById(id).ifPresent(artist -> {
+        try {
+            logger.info("Intentando eliminar logo del artista con ID: {}", id);
+            Artist artist = artistRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("El artista no existe."));
+
             if (artist.getLogo() != null) {
+                // 1. Borrado físico del archivo
                 fileService.deleteFile(artist.getLogo(), ARTISTS_FOLDER);
+
+                // 2. Actualización de la entidad
                 artist.setLogo(null);
                 artistRepository.save(artist);
+                logger.info("Logo del artista {} eliminado correctamente", id);
+            } else {
+                logger.warn("El artista {} no tenía logo asignado", id);
             }
-        });
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error al eliminar el logo del artista {}: {}", id, e.getMessage());
+            throw new RuntimeException("No se pudo eliminar el logo.");
+        }
     }
 
+    /**
+     * Elimina una imagen específica de la galería de un artista.
+     */
     @Transactional
     public void deleteArtistImage(Long imageId) {
-        artistImageRepository.findById(imageId).ifPresent(img -> {
-            fileService.deleteFile(img.getImageUrl(), ARTISTS_FOLDER);
-            artistImageRepository.delete(img);
-        });
-    }
+        try {
+            logger.info("Intentando eliminar imagen de galería con ID: {}", imageId);
 
-    public List<ArtistDTO> getAllArtistsDTO() {
-        return artistRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
+            artistImageRepository.findById(imageId).ifPresentOrElse(img -> {
+                // 1. Borrado físico
+                fileService.deleteFile(img.getImageUrl(), ARTISTS_FOLDER);
 
-    private ArtistDTO convertToDTO(Artist artist) {
-        return new ArtistDTO(
-                artist.getId(),
-                artist.getName(),
-                artist.getGenre(),
-                artist.getCountry(),
-                artist.getLogo(),
-                artist.getImages().stream()
-                        .map(img -> new ArtistImageDTO(img.getId(), img.getImageUrl()))
-                        .collect(Collectors.toList())
-        );
+                // 2. Borrado del registro (esto rompe la relación en la base de datos)
+                artistImageRepository.delete(img);
+                logger.info("Imagen de galería {} eliminada correctamente", imageId);
+            }, () -> {
+                throw new IllegalArgumentException("La imagen no existe.");
+            });
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error al eliminar la imagen de galería {}: {}", imageId, e.getMessage());
+            throw new RuntimeException("No se pudo eliminar la imagen de la galería.");
+        }
     }
 }
