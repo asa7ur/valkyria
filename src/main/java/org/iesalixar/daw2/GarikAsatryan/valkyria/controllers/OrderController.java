@@ -48,7 +48,7 @@ public class OrderController {
      * 2. Crea la sesión en Stripe.
      * 3. Devuelve la URL de Stripe para que Angular redireccione al usuario.
      */
-    @PostMapping("/checkout")
+    @PostMapping
     public ResponseEntity<Map<String, String>> checkout(
             @Valid @RequestBody OrderRequestDTO request,
             Authentication authentication) throws Exception {
