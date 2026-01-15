@@ -25,7 +25,7 @@ public class CampingTypeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CampingTypeDTO> getCamppingTypeById(@PathVariable Long id) {
+    public ResponseEntity<CampingTypeDTO> getCampingTypeById(@PathVariable Long id) {
         return ResponseEntity.ok(campingTypeService.getCampingTypeById(id));
     }
 
