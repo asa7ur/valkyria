@@ -25,4 +25,6 @@ public class OrderRequestDTO {
 
     @Valid
     private List<CampingCreateDTO> campings = new ArrayList<>();
+
+    private String guestEmail;
 }

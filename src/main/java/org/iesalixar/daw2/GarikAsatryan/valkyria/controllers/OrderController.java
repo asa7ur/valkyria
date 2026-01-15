@@ -12,7 +12,6 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.services.PaymentService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.PdfGeneratorService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.UserService;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -53,8 +52,11 @@ public class OrderController {
             @Valid @RequestBody OrderRequestDTO request,
             Authentication authentication) throws Exception {
 
-        // Obtenemos el usuario real desde la base de datos
-        User user = userService.getUserByEmailEntity(authentication.getName());
+        User user = null;
+        // Si hay autenticación, buscamos al usuario. Si no, se queda como null.
+        if (authentication != null && authentication.isAuthenticated()) {
+            user = userService.getUserByEmailEntity(authentication.getName());
+        }
 
         // Ejecutamos la lógica de creación de pedido y stock
         Order order = orderService.executeOrder(request, user);

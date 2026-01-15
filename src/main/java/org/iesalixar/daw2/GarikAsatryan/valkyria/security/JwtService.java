@@ -3,6 +3,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,8 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    // Clave secreta (mínimo 32 caracteres para HS256)
-    private static final String SECRET_KEY = "valkyr_fest_super_secret_key_for_jwt_token_generation_2024";
+    @Value("${app.jwt.secret}")
+    private String secretKey;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -65,7 +66,7 @@ public class JwtService {
     }
 
     private SecretKey getSignInKey() {
-        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

@@ -35,6 +35,9 @@ public class Order {
     @Column(name = "status")
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Column(name = "guest_email")
+    private String guestEmail;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;

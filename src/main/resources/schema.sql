@@ -62,6 +62,7 @@ CREATE TABLE orders
     total_price DECIMAL(10, 2) NOT NULL,
     status      ENUM ('PENDING', 'PAID', 'CANCELLED') DEFAULT 'PENDING',
     user_id     BIGINT,
+    guest_email VARCHAR(100),
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 

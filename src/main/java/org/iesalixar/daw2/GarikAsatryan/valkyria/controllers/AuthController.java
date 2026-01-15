@@ -45,6 +45,7 @@ public class AuthController {
 
         // 2. Cargar usuario y generar Token
         final UserDetails userDetails = userDetailsService.loadUserByUsername(request.get("username"));
+        User userEntity = userService.getUserByEmailEntity(userDetails.getUsername());
         final String jwt = jwtService.generateToken(userDetails);
 
         // 3. Cookie para Thymeleaf
@@ -63,6 +64,7 @@ public class AuthController {
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("token", jwt);
         responseBody.put("username", userDetails.getUsername());
+        responseBody.put("firstName", userEntity.getFirstName());
         responseBody.put("roles", userDetails.getAuthorities());
         responseBody.put("redirectUrl", redirectUrl);
 

@@ -70,10 +70,15 @@ public class OrderService {
      */
     @Transactional
     public Order executeOrder(OrderRequestDTO request, User user) {
-        logger.info("Iniciando procesamiento de pedido para: {}", user.getEmail());
+        if (user != null) {
+            logger.info("Procesando pedido para usuario: {}", user.getEmail());
+        } else {
+            logger.info("Procesando pedido para invitado: {}", request.getGuestEmail());
+        }
 
         Order order = new Order();
         order.setUser(user);
+        order.setGuestEmail(request.getGuestEmail());
         order.setOrderDate(LocalDateTime.now());
         order.setStatus(OrderStatus.PENDING);
 

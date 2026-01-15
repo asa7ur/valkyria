@@ -64,7 +64,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        // Permitimos el acceso a la API y recursos estáticos
+                        // Rutas públicas
                         .requestMatchers(
                                 "/",
                                 "/api/**",
@@ -76,11 +76,21 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/stripe/**").permitAll()
 
-                        // Protegemos explícitamente la zona de administración de Thymeleaf
+                        // Protegemos la zona de administración
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
 
-                        // Cualquier otra petición requiere estar autenticado
+                        // Cualquier otra petición
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            // Si no está autenticado e intenta ir a /admin, redirigir a /
+                            response.sendRedirect("/");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            // Si está autenticado pero NO es ADMIN/MANAGER, redirigir a /
+                            response.sendRedirect("/");
+                        })
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
