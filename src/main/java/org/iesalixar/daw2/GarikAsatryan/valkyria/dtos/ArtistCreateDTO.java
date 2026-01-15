@@ -1,6 +1,6 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.dtos;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -15,24 +15,24 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ArtistCreateDTO {
-    @NotEmpty(message = "{msg.validation.required}")
+    @NotBlank(message = "{msg.validation.required}")
     @Size(max = 100, message = "{msg.validation.size}")
     private String name;
 
-    @NotEmpty(message = "{msg.validation.required}")
+    @NotBlank(message = "{msg.validation.required}")
     @Size(max = 20, message = "{msg.validation.size}")
     private String phone;
 
-    @NotEmpty(message = "{msg.validation.required}")
+    @NotBlank(message = "{msg.validation.required}")
     @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$", message = "{msg.validation.email}")
     @Size(max = 100, message = "{msg.validation.size}")
     private String email;
 
-    @NotEmpty(message = "{msg.validation.required}")
+    @NotBlank(message = "{msg.validation.required}")
     @Size(max = 100, message = "{msg.validation.size}")
     private String genre;
 
-    @NotEmpty(message = "{msg.validation.required}")
+    @NotBlank(message = "{msg.validation.required}")
     @Size(max = 100, message = "{msg.validation.size}")
     private String country;
 

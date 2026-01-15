@@ -22,10 +22,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class ArtistController {
 
-    private static final String ARTISTS_FOLDER = "artists";
-
     private final ArtistService artistService;
-    private final FileService fileService;
 
     // --- ENDPOINTS DE CRUD BÁSICO ---
 
@@ -74,19 +71,8 @@ public class ArtistController {
     public ResponseEntity<String> uploadLogo(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
-        try {
-            // 1. Borramos el logo anterior si existe
-            artistService.deleteLogo(id);
-
-            // 2. Guardamos el nuevo archivo físico
-            String baseName = fileService.saveFile(file, ARTISTS_FOLDER);
-
-            artistService.updateLogo(id, baseName);
-
-            return ResponseEntity.ok(baseName);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al subir el logo");
-        }
+        String baseName = artistService.processAndSaveLogo(id, file);
+        return ResponseEntity.ok(baseName);
     }
 
     /**
