@@ -38,8 +38,8 @@ public class RegistrationService {
         user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
 
         // 4. Asignar rol por defecto
-        Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new AppException("msg.error.role-not-found", "ROLE_USER"));
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new AppException("msg.error.role-not-found", "USER"));
         user.setRoles(Collections.singletonList(userRole));
 
         // 5. El usuario empieza desactivado hasta que confirme el email

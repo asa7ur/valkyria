@@ -89,9 +89,9 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setEnabled(true); // El admin crea usuarios ya activos
 
-        // Asignar ROLE_USER por defecto o según lógica de admin
-        Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new AppException("msg.error.role-not-found", "ROLE_USER"));
+        // Asignar USER por defecto o según lógica de admin
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new AppException("msg.error.role-not-found", "USER"));
         user.setRoles(List.of(userRole));
 
         return userMapper.toDTO(userRepository.save(user));

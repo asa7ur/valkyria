@@ -41,7 +41,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Define la jerarquía de roles: ROLE_ADMIN incluye a ROLE_MANAGER.
+     * Define la jerarquía de roles: ADMIN incluye a MANAGER.
      */
     @Bean
     public RoleHierarchy roleHierarchy() {
@@ -77,7 +77,7 @@ public class SecurityConfig {
                                 "/stripe/**").permitAll()
 
                         // Protegemos explícitamente la zona de administración de Thymeleaf
-                        .requestMatchers("/admin/**").hasAnyRole("ROLE_ADMIN", "ROLE_MANAGER")
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
 
                         // Cualquier otra petición requiere estar autenticado
                         .anyRequest().authenticated()

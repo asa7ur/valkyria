@@ -7,9 +7,9 @@ VALUES ('garik@email.com', '$2a$12$8LssFTKG6GY.pl7Xd.K8DOHFHWwUUm1wOzQ5L4LT9uoIB
         '1996-01-27', '676767676');
 
 INSERT IGNORE INTO roles (name)
-VALUES ('ROLE_ADMIN'),
-       ('ROLE_MANAGER'),
-       ('ROLE_USER');
+VALUES ('ADMIN'),
+       ('MANAGER'),
+       ('USER');
 
 INSERT IGNORE INTO user_role (user_id, role_id)
 VALUES (1, 1),
