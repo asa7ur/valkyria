@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -40,14 +39,11 @@ public class ArtistService {
      * Obtiene una página de artistas, opcionalmente filtrada por nombre.
      */
     public Page<ArtistDTO> getAllArtists(String searchTerm, Pageable pageable) {
-        logger.info("Buscando artistas con término: {}", searchTerm);
-        Page<Artist> artistPage;
+        logger.info("Buscando artistas...");
 
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            artistPage = artistRepository.searchArtists(searchTerm, pageable);
-        } else {
-            artistPage = artistRepository.findAll(pageable);
-        }
+        Page<Artist> artistPage = (searchTerm != null && !searchTerm.trim().isEmpty())
+                ? artistRepository.searchArtists(searchTerm, pageable)
+                : artistRepository.findAll(pageable);
 
         return artistPage.map(artistMapper::toDTO);
     }
@@ -64,7 +60,7 @@ public class ArtistService {
      * Crea un nuevo artista verificando que el email no esté duplicado.
      */
     @Transactional
-    public ArtistDTO createArtist(ArtistCreateDTO artistCreateDTO, Locale locale) {
+    public ArtistDTO createArtist(ArtistCreateDTO artistCreateDTO) {
         if (artistRepository.existsByEmail(artistCreateDTO.getEmail())) {
             throw new AppException("msg.artist.email-exists", artistCreateDTO.getEmail());
         }
@@ -79,7 +75,7 @@ public class ArtistService {
      * Actualiza un artista existente.
      */
     @Transactional
-    public ArtistDTO updateArtist(Long id, ArtistCreateDTO artistCreateDTO, Locale locale) {
+    public ArtistDTO updateArtist(Long id, ArtistCreateDTO artistCreateDTO) {
         Artist existingArtist = artistRepository.findById(id)
                 .orElseThrow(() -> new AppException("msg.artist.not-found", id));
 
@@ -146,8 +142,6 @@ public class ArtistService {
             String fileName = fileService.saveFile(file, ARTISTS_FOLDER);
 
             // 4. Crear la entidad ArtistImage
-            // NOTA: Asumo que ArtistImage tiene un constructor vacío y setters,
-            // o un patrón Builder. Ajusta esto según la definición de tu entidad ArtistImage.
             ArtistImage image = new ArtistImage();
             image.setImageUrl(fileName);
             image.setArtist(artist); // Asociación crucial (lado propietario de la relación)
@@ -155,7 +149,7 @@ public class ArtistService {
             newImages.add(image);
         }
 
-        // 5. Guardar todas las entidades de imagen en lote (más eficiente que una por una)
+        // 5. Guardar todas las entidades de imagen en lote
         List<ArtistImage> savedImages = artistImageRepository.saveAll(newImages);
         logger.info("Se han subido {} imágenes para el artista con ID: {}", savedImages.size(), artistId);
 

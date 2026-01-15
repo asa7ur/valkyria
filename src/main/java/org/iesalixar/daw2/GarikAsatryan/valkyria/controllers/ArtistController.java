@@ -4,9 +4,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.ArtistService;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.services.FileService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -46,7 +43,7 @@ public class ArtistController {
     public ResponseEntity<ArtistDTO> createArtist(
             @Valid @RequestBody ArtistCreateDTO artistCreateDTO,
             Locale locale) {
-        ArtistDTO created = artistService.createArtist(artistCreateDTO, locale);
+        ArtistDTO created = artistService.createArtist(artistCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -55,7 +52,7 @@ public class ArtistController {
             @PathVariable Long id,
             @Valid @RequestBody ArtistCreateDTO artistCreateDTO,
             Locale locale) {
-        return ResponseEntity.ok(artistService.updateArtist(id, artistCreateDTO, locale));
+        return ResponseEntity.ok(artistService.updateArtist(id, artistCreateDTO));
     }
 
     @DeleteMapping("/{id}")
