@@ -53,8 +53,12 @@ public class EmailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        String to = order.getUser().getEmail();
-        String firstName = order.getUser().getFirstName();
+        String to = (order.getUser() != null) ? order.getUser().getEmail() : order.getGuestEmail();
+        String firstName = (order.getUser() != null) ? order.getUser().getFirstName() : "Invitado";
+
+        if (to == null || to.isEmpty()) {
+            throw new Exception("No hay un correo electrónico válido para enviar la confirmación.");
+        }
 
         // Preparar asunto y cuerpo
         String subject = getMessage("msg.order.email.subject", new Object[]{order.getId()});
@@ -70,7 +74,8 @@ public class EmailService {
         helper.addAttachment(fileName, new ByteArrayResource(pdfBytes));
 
         mailSender.send(message);
-        logger.info("Confirmación de pedido #{} enviada a: {}", order.getId(), to);
+        String recipient = (order.getUser() != null) ? order.getUser().getEmail() : order.getGuestEmail();
+        logger.info("Documentación enviada por email a: {}", recipient);
     }
 
     /**
