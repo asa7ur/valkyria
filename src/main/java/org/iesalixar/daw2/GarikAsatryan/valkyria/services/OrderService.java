@@ -1,13 +1,15 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingOrderDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderRequestDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderResponseDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketOrderDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.CampingMapper;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.OrderMapper;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.TicketMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.CampingTypeRepository;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.OrderRepository;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.TicketTypeRepository;
@@ -16,190 +18,131 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
+
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+
     private final OrderRepository orderRepository;
     private final TicketTypeRepository ticketTypeRepository;
     private final CampingTypeRepository campingTypeRepository;
+    private final OrderMapper orderMapper;
+    private final TicketMapper ticketMapper;
+    private final CampingMapper campingMapper;
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    /**
+     * Obtiene todos los pedidos con paginación y búsqueda (Panel de Control).
+     */
+    public Page<OrderResponseDTO> getAllOrders(String searchTerm, Pageable pageable) {
+        Page<Order> orderPage = (searchTerm != null && !searchTerm.trim().isEmpty())
+                ? orderRepository.searchOrders(searchTerm, pageable)
+                : orderRepository.findAll(pageable);
+        return orderPage.map(orderMapper::toResponseDTO);
     }
 
-    public Optional<Order> getOrderById(Long id) {
-        return orderRepository.findById(id);
+    /**
+     * Devuelve el historial de pedidos de un usuario específico.
+     */
+    public List<OrderResponseDTO> getOrdersByUser(String email) {
+        List<Order> orders = orderRepository.findByUserEmailOrderByOrderDateDesc(email);
+        return orderMapper.toResponseDTOList(orders);
     }
 
-    @Transactional
-    public void saveOrder(Order order) {
-        orderRepository.save(order);
+    /**
+     * Busca un pedido por ID y lo devuelve como entidad (uso interno).
+     */
+    public Order getOrderEntityById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new AppException("msg.error.order-not-found", id));
     }
 
-    @Transactional
-    public void deleteOrder(Long id) {
-        orderRepository.deleteById(id);
-    }
-
-    public Page<Order> getAllOrders(String searchTerm, Pageable pageable) {
-        if (searchTerm != null && !searchTerm.isEmpty()) {
-            return orderRepository.searchOrders(searchTerm, pageable);
-        }
-        return orderRepository.findAll(pageable);
-    }
-
-    public List<Order> getOrdersByUser(String email) {
-        return orderRepository.findByUserEmailOrderByOrderDateDesc(email);
-    }
-
-    public BigDecimal calculateTotal(OrderRequestDTO request) {
-        BigDecimal total = BigDecimal.ZERO;
-
-        if (request.getTickets() != null) {
-            for (var t : request.getTickets()) {
-                total = total.add(ticketTypeRepository.findById(t.getTicketTypeId())
-                        .map(TicketType::getPrice).orElse(BigDecimal.ZERO));
-            }
-        }
-
-        if (request.getCampings() != null) {
-            for (var c : request.getCampings()) {
-                total = total.add(campingTypeRepository.findById(c.getCampingTypeId())
-                        .map(CampingType::getPrice).orElse(BigDecimal.ZERO));
-            }
-        }
-        return total;
-    }
-
+    /**
+     * PROCESO DE COMPRA PRINCIPAL
+     * Valida stock, asocia al usuario, calcula precios y genera QRs.
+     */
     @Transactional
     public Order executeOrder(OrderRequestDTO request, User user) {
-        logger.info("Iniciando creación de pedido para el usuario: {}", user.getEmail());
-        boolean hasTickets = request.getTickets() != null && !request.getTickets().isEmpty();
-        boolean hasCampings = request.getCampings() != null && !request.getCampings().isEmpty();
-
-        if (!hasTickets && !hasCampings) {
-            throw new AppException("msg.validation.atLeastOne");
-        }
+        logger.info("Iniciando procesamiento de pedido para: {}", user.getEmail());
 
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(LocalDateTime.now());
         order.setStatus(OrderStatus.PENDING);
+
         BigDecimal totalPrice = BigDecimal.ZERO;
 
-        if (hasTickets) {
-            for (TicketOrderDTO tDto : request.getTickets()) {
+        // 1. Procesar Tickets (Entradas)
+        if (request.getTickets() != null && !request.getTickets().isEmpty()) {
+            for (TicketCreateDTO tDto : request.getTickets()) {
                 TicketType type = ticketTypeRepository.findById(tDto.getTicketTypeId())
-                        .orElseThrow(() -> new AppException("msg.error.ticketTypeNotFound"));
+                        .orElseThrow(() -> new AppException("msg.error.ticket-type-not-found"));
 
-                if (type.getStockAvailable() <= 0) throw new AppException("msg.error.noStock", type.getName());
+                if (type.getStockAvailable() <= 0) {
+                    throw new AppException("msg.error.no-stock", type.getName());
+                }
 
-                Ticket ticket = new Ticket();
-                ticket.setFirstName(tDto.getFirstName());
-                ticket.setLastName(tDto.getLastName());
-                ticket.setDocumentType(tDto.getDocumentType());
-                ticket.setDocumentNumber(tDto.getDocumentNumber());
-                ticket.setBirthDate(tDto.getBirthDate());
-                ticket.setTicketType(type);
-                ticket.setQrCode(UUID.randomUUID().toString());
-                ticket.setOrder(order);
+                // Generar QR y mapear usando TicketMapper
+                String qr = "TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+                Ticket ticket = ticketMapper.toEntityFromOrder(tDto, type, order, qr);
 
                 order.getTickets().add(ticket);
                 totalPrice = totalPrice.add(type.getPrice());
 
+                // Actualizar stock
                 type.setStockAvailable(type.getStockAvailable() - 1);
                 ticketTypeRepository.save(type);
             }
         }
 
-        if (hasCampings) {
-            for (CampingOrderDTO cDto : request.getCampings()) {
+        // 2. Procesar Campings (Reservas)
+        if (request.getCampings() != null && !request.getCampings().isEmpty()) {
+            for (CampingCreateDTO cDto : request.getCampings()) {
                 CampingType type = campingTypeRepository.findById(cDto.getCampingTypeId())
-                        .orElseThrow(() -> new AppException("msg.error.campingTypeNotFound"));
+                        .orElseThrow(() -> new AppException("msg.error.camping-type-not-found"));
 
                 if (type.getStockAvailable() <= 0) {
-                    throw new AppException("msg.error.noStock", type.getName());
+                    throw new AppException("msg.error.no-stock", type.getName());
                 }
 
-                Camping camping = new Camping();
-                camping.setFirstName(cDto.getFirstName());
-                camping.setLastName(cDto.getLastName());
-                camping.setDocumentType(cDto.getDocumentType());
-                camping.setDocumentNumber(cDto.getDocumentNumber());
-                camping.setBirthDate(cDto.getBirthDate());
-                camping.setCampingType(type);
-                camping.setQrCode(UUID.randomUUID().toString());
-                camping.setOrder(order);
+                // Generar QR y mapear usando CampingMapper
+                String qr = "CMP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+                Camping camping = campingMapper.toEntityFromOrder(cDto, type, order, qr);
 
                 order.getCampings().add(camping);
                 totalPrice = totalPrice.add(type.getPrice());
 
+                // Actualizar stock
                 type.setStockAvailable(type.getStockAvailable() - 1);
                 campingTypeRepository.save(type);
             }
         }
 
         order.setTotalPrice(totalPrice);
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        logger.info("Pedido #{} creado con éxito. Total: {} €", savedOrder.getId(), savedOrder.getTotalPrice());
+
+        return savedOrder;
     }
 
     /**
-     * Método para confirmar el pago.
-     * Al ser @Transactional, asegura que el cambio de estado se guarde inmediatamente.
+     * Confirma el pago de un pedido tras recibir la notificación de Stripe.
      */
     @Transactional
     public Order confirmPayment(Long orderId) {
-        logger.info("Confirmando pago para el pedido #{}", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + orderId));
+                .orElseThrow(() -> new AppException("msg.error.order-not-found", orderId));
+
         order.setStatus(OrderStatus.PAID);
+        logger.info("Pedido #{} marcado como PAGADO.", orderId);
+
         return orderRepository.save(order);
-    }
-
-    public List<OrderResponseDTO> getOrdersByUserDTO(String email) {
-        List<Order> orders = orderRepository.findByUserEmailOrderByOrderDateDesc(email);
-        return orders.stream()
-                .map(this::convertToDTO)
-                .toList();
-    }
-
-    private OrderResponseDTO convertToDTO(Order order) {
-        OrderResponseDTO dto = new OrderResponseDTO();
-        dto.setId(order.getId());
-        dto.setOrderDate(order.getOrderDate());
-        dto.setTotalPrice(order.getTotalPrice());
-        dto.setStatus(order.getStatus());
-
-        dto.setTickets(order.getTickets().stream().map(t -> {
-            TicketOrderDTO tDto = new TicketOrderDTO();
-            tDto.setFirstName(t.getFirstName());
-            tDto.setLastName(t.getLastName());
-            tDto.setDocumentType(t.getDocumentType());
-            tDto.setDocumentNumber(t.getDocumentNumber());
-            tDto.setBirthDate(t.getBirthDate());
-            tDto.setTicketTypeId(t.getTicketType().getId());
-            return tDto;
-        }).toList());
-
-        dto.setCampings(order.getCampings().stream().map(c -> {
-            CampingOrderDTO cDto = new CampingOrderDTO();
-            cDto.setFirstName(c.getFirstName());
-            cDto.setLastName(c.getLastName());
-            cDto.setDocumentType(c.getDocumentType());
-            cDto.setDocumentNumber(c.getDocumentNumber());
-            cDto.setBirthDate(c.getBirthDate());
-            cDto.setCampingTypeId(c.getCampingType().getId());
-            return cDto;
-        }).toList());
-
-        return dto;
     }
 }

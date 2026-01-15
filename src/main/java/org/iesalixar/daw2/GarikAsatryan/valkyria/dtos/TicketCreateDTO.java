@@ -9,10 +9,6 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.validation.IsAdult;
 
 import java.time.LocalDate;
 
-/**
- * DTO para la creación y edición de tickets.
- * No incluimos qrCode ni status aquí porque se gestionan internamente.
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -34,7 +30,7 @@ public class TicketCreateDTO {
     private String documentNumber;
 
     @NotNull(message = "{msg.validation.required}")
-    @IsAdult // Reutilizamos tu validador de mayoría de edad
+    @IsAdult
     private LocalDate birthDate;
 
     @NotNull(message = "{msg.validation.required}")

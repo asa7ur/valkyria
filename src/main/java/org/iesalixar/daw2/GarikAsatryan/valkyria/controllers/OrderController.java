@@ -1,5 +1,6 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderRequestDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderResponseDTO;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class OrderController {
@@ -31,29 +32,54 @@ public class OrderController {
     private final PaymentService paymentService;
     private final PdfGeneratorService pdfGeneratorService;
 
+    /**
+     * Devuelve el historial de pedidos del usuario autenticado.
+     */
     @GetMapping("/my-orders")
     public ResponseEntity<List<OrderResponseDTO>> getMyOrders(Authentication authentication) {
-        List<OrderResponseDTO> orders = orderService.getOrdersByUserDTO(authentication.getName());
+        // authentication.getName() devuelve el email del usuario logueado (desde el JWT)
+        List<OrderResponseDTO> orders = orderService.getOrdersByUser(authentication.getName());
         return ResponseEntity.ok(orders);
     }
 
-    @PostMapping
-    public ResponseEntity<?> checkout(@RequestBody OrderRequestDTO request, Authentication authentication) throws Exception {
-        User user = userService.getUserByEmail(authentication.getName());
+    /**
+     * Proceso de Checkout:
+     * 1. Crea el pedido en estado PENDING y descuenta stock.
+     * 2. Crea la sesión en Stripe.
+     * 3. Devuelve la URL de Stripe para que Angular redireccione al usuario.
+     */
+    @PostMapping("/checkout")
+    public ResponseEntity<Map<String, String>> checkout(
+            @Valid @RequestBody OrderRequestDTO request,
+            Authentication authentication) throws Exception {
+
+        // Obtenemos el usuario real desde la base de datos
+        User user = userService.getUserByEmailEntity(authentication.getName());
+
+        // Ejecutamos la lógica de creación de pedido y stock
         Order order = orderService.executeOrder(request, user);
+
+        // Generamos la pasarela de pago
         String stripeUrl = paymentService.createStripeSession(order);
+
+        // Devolvemos la URL para que el frontend haga: window.location.href = res.url;
         return ResponseEntity.ok(Map.of("url", stripeUrl));
     }
 
+    /**
+     * Descarga del PDF de credenciales.
+     * Solo permite la descarga si el pedido pertenece al usuario autenticado.
+     */
     @GetMapping("/{id}/download")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id, Authentication authentication) throws Exception {
-        Order order = orderService.getOrderById(id)
-                .orElseThrow(() -> new AppException("msg.error.orderNotFound"));
+        Order order = orderService.getOrderEntityById(id);
 
+        // Seguridad: Comprobar que el pedido es del usuario que lo solicita
         if (!order.getUser().getEmail().equals(authentication.getName())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            throw new AppException("msg.error.unauthorized-access");
         }
 
+        // Generamos los bytes del PDF
         byte[] pdfBytes = pdfGeneratorService.generateOrderPdf(order);
 
         return ResponseEntity.ok()

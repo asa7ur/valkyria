@@ -12,6 +12,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Order;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class PaymentService {
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
+
     private final OrderService orderService;
     private final PdfGeneratorService pdfGeneratorService;
     private final EmailService emailService;
@@ -41,12 +43,17 @@ public class PaymentService {
         Stripe.apiKey = secretKey;
     }
 
+    /**
+     * Crea una sesión de pago en Stripe.
+     * Convierte el precio a céntimos (movePointRight(2)).
+     */
     public String createStripeSession(Order order) throws Exception {
         SessionCreateParams params = SessionCreateParams.builder()
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setClientReferenceId(order.getId().toString())
-                .setSuccessUrl(appUrl + "/purchase/success")
+                // URLs a las que volverá el usuario desde Stripe
+                .setSuccessUrl(appUrl + "/purchase/success?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(appUrl + "/purchase/cancel")
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
@@ -70,56 +77,59 @@ public class PaymentService {
         return session.getUrl();
     }
 
+    /**
+     * Procesa el evento de Webhook enviado por Stripe cuando el pago se completa.
+     */
     @Transactional
     public void processWebhookEvent(String payload, String sigHeader) throws Exception {
-        logger.info("Webhook de Stripe recibido.");
         Event event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
-        logger.info("Evento validado: {}", event.getType());
 
         if ("checkout.session.completed".equals(event.getType())) {
-            EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-            String orderIdStr = null;
-
-            // Intento 1: Deserialización estándar
-            if (dataObjectDeserializer.getObject().isPresent()) {
-                Session session = (Session) dataObjectDeserializer.getObject().get();
-                orderIdStr = session.getClientReferenceId();
-                logger.info("Sesión deserializada correctamente.");
-            }
-            // Intento 2: Extracción manual con Jackson (Fallback)
-            else {
-                logger.warn("Fallo de deserialización por versión. Usando extracción manual con Jackson.");
-                String rawJson = dataObjectDeserializer.getRawJson();
-                JsonNode node = objectMapper.readTree(rawJson);
-                if (node.has("client_reference_id") && !node.get("client_reference_id").isNull()) {
-                    orderIdStr = node.get("client_reference_id").asText();
-                }
-            }
+            String orderIdStr = extractOrderId(event);
 
             if (orderIdStr != null) {
-                try {
-                    Long orderId = Long.parseLong(orderIdStr);
+                Long orderId = Long.parseLong(orderIdStr);
 
-                    // 1. Marcar como PAID en la DB (Transaccional)
-                    Order order = orderService.confirmPayment(orderId);
-                    logger.info("Pedido #{} marcado como PAID en DB.", orderId);
+                // 1. Confirmar pago en DB (Esto es lo más importante)
+                Order order = orderService.confirmPayment(orderId);
+                logger.info("Pago confirmado para el pedido #{}", orderId);
 
-                    // 2. Procesos secundarios (PDF y Email)
-                    try {
-                        byte[] pdfBytes = pdfGeneratorService.generateOrderPdf(order);
-                        emailService.sendOrderConfirmationEmail(order, pdfBytes);
-                        logger.info("Email enviado a Mailtrap con éxito.");
-                    } catch (Exception e) {
-                        logger.warn("El pago se guardó, pero falló el envío del email: {}", e.getMessage());
-                    }
-
-                } catch (Exception e) {
-                    logger.error("ERROR CRÍTICO procesando el webhook", e);
-                    throw e;
-                }
-            } else {
-                logger.error("No se encontró clientReferenceId en el evento de Stripe.");
+                // 2. Procesos secundarios protegidos (Soft Fail)
+                // Si esto falla, el pedido sigue como PAID, lo cual es correcto.
+                enviarDocumentacion(order);
             }
+        }
+    }
+
+    /**
+     * Intenta extraer el ID del pedido de la sesión de Stripe.
+     */
+    private String extractOrderId(Event event) {
+        EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
+
+        return dataObjectDeserializer.getObject()
+                .map(stripeObject -> ((Session) stripeObject).getClientReferenceId())
+                .orElseGet(() -> {
+                    try {
+                        JsonNode node = objectMapper.readTree(dataObjectDeserializer.getRawJson());
+                        return node.has("client_reference_id") ? node.get("client_reference_id").asText() : null;
+                    } catch (Exception e) {
+                        return null;
+                    }
+                });
+    }
+
+    /**
+     * Lógica de envío de PDF y Email encapsulada para no romper la transacción principal.
+     */
+    private void enviarDocumentacion(Order order) {
+        try {
+            byte[] pdfBytes = pdfGeneratorService.generateOrderPdf(order);
+            emailService.sendOrderConfirmationEmail(order, pdfBytes);
+            logger.info("Documentación enviada por email al usuario: {}", order.getUser().getEmail());
+        } catch (Exception e) {
+            logger.error("Error al enviar la documentación del pedido #{}: {}", order.getId(), e.getMessage());
+            // No relanzamos la excepción para no hacer rollback del pago.
         }
     }
 }

@@ -2,7 +2,9 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.mappers;
 
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Order;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Ticket;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.TicketType;
 import org.mapstruct.*;
 
 import java.util.List;
@@ -42,4 +44,12 @@ public interface TicketMapper {
     @Mapping(target = "ticketType", ignore = true)
     @Mapping(target = "order", ignore = true)
     void updateEntityFromDTO(TicketCreateDTO dto, @MappingTarget Ticket entity);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "ticketType", source = "type")
+    @Mapping(target = "order", source = "order")
+    @Mapping(target = "qrCode", source = "qrCode")
+    @Mapping(target = "status", constant = "ACTIVE")
+        // Mapeamos los campos del DTO automáticamente y los extras manualmente
+    Ticket toEntityFromOrder(TicketCreateDTO dto, TicketType type, Order order, String qrCode);
 }

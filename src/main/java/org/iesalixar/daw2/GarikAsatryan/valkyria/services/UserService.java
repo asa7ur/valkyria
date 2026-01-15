@@ -43,6 +43,15 @@ public class UserService {
     }
 
     /**
+     * Busca un usuario por email y devuelve la ENTIDAD.
+     * Útil para procesos internos como la creación de pedidos.
+     */
+    public User getUserByEmailEntity(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException("msg.error.user-not-found", email));
+    }
+
+    /**
      * UPDATE: Actualiza un usuario existente.
      * No solemos actualizar la contraseña aquí (se hace en un flujo de "cambiar password").
      */
