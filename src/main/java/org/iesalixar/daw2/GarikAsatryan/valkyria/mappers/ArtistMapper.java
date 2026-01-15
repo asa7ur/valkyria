@@ -10,25 +10,25 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ArtistMapper {
 
-    ArtistDTO toDTO(Artist artist);
+    ArtistDTO toDTO(Artist entity);
 
-    ArtistDetailDTO toDetailDTO(Artist artist);
+    ArtistDetailDTO toDetailDTO(Artist entity);
 
-    List<ArtistDTO> toDTOList(List<Artist> artists);
+    List<ArtistDTO> toDTOList(List<Artist> entities);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "performances", ignore = true)
-    Artist toEntity(ArtistCreateDTO artistCreateDTO);
+    Artist toEntity(ArtistCreateDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "performances", ignore = true)
     void updateEntityFromDTO(ArtistCreateDTO dto, @MappingTarget Artist entity);
 
-    ArtistImageDTO toImageDTO(ArtistImage artistImage);
+    ArtistImageDTO toImageDTO(ArtistImage entity);
 
     @Mapping(target = "artist", ignore = true)
         // Importante para evitar recursión infinita
-    ArtistImage toImageEntity(ArtistImageDTO artistImageDTO);
+    ArtistImage toImageEntity(ArtistImageDTO dto);
 
     /**
      * Este método asegura que cada imagen de la lista tenga la referencia
