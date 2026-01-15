@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.security.JwtService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.RegistrationService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.UserService;
@@ -39,7 +38,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request, HttpServletResponse response) {
-        // 1. Autenticar credenciales
+        // 1. Autenticar credenciales (Si fallan, Spring lanza AuthenticationException)
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.get("username"), request.get("password"))
         );
@@ -48,43 +47,34 @@ public class AuthController {
         final UserDetails userDetails = userDetailsService.loadUserByUsername(request.get("username"));
         final String jwt = jwtService.generateToken(userDetails);
 
-        // 3. Crear Cookie para Thymeleaf (Administración)
+        // 3. Cookie para Thymeleaf
         Cookie jwtCookie = new Cookie("jwt", jwt);
         jwtCookie.setHttpOnly(true);
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(24 * 60 * 60);
         response.addCookie(jwtCookie);
 
-        // --- NUEVA LÓGICA DE REDIRECCIÓN ---
+        // 4. Lógica de redirección
         boolean isAdminOrManager = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
 
-        // Definimos la URL de redirección: si es admin va a 8080, si no se queda en Angular
         String redirectUrl = isAdminOrManager ? "http://localhost:8080/admin/dashboard" : "http://localhost:4200/";
 
-        // 4. Responder a Angular con el JSON esperado incluyendo la redirectUrl
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("token", jwt);
         responseBody.put("username", userDetails.getUsername());
         responseBody.put("roles", userDetails.getAuthorities());
-        responseBody.put("redirectUrl", redirectUrl); // <--- Añadimos este campo
+        responseBody.put("redirectUrl", redirectUrl);
 
         return ResponseEntity.ok(responseBody);
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
-        try {
-            registrationService.registerUser(registrationDTO);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", messageSource.getMessage("msg.register.success", null, LocaleContextHolder.getLocale()));
-            return ResponseEntity.ok(response);
-        } catch (AppException e) {
-            String errorMessage = messageSource.getMessage(e.getMessageKey(), e.getArgs(), LocaleContextHolder.getLocale());
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", errorMessage);
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
+        registrationService.registerUser(registrationDTO);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", messageSource.getMessage("msg.register.success", null, LocaleContextHolder.getLocale()));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/confirm")

@@ -1,61 +1,48 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Role;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.UserMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.RoleRepository;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
 public class RegistrationService {
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final VerificationTokenService verificationTokenService;
-    private final EmailService emailService;
 
     @Transactional
-    public void registerUser(UserRegistrationDTO dto) {
-        // Verificar si el email ya existe
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new AppException("msg.login.emailExists", dto.getEmail());
+    public void registerUser(UserRegistrationDTO registrationDTO) {
+        // 1. Verificar si el email ya existe
+        if (userRepository.existsByEmail(registrationDTO.getEmail())) {
+            throw new AppException("msg.register.error.email-exists", registrationDTO.getEmail());
         }
 
-        // Crear la entidad User y mapear campos
-        User user = new User();
-        user.setEmail(dto.getEmail());
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-        user.setBirthDate(dto.getBirthDate());
-        user.setPhone(dto.getPhone());
+        // 2. Mapear DTO a Entidad
+        User user = userMapper.toEntity(registrationDTO);
 
-        // El usuario nace desactivado
-        user.setEnabled(false);
+        // 3. Cifrar la contraseña
+        user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
 
-        // Cifrar la contraseña
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-
-        // Asignar rol "User por defecto"
-        Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Error: Role 'User' not found."));
+        // 4. Asignar rol por defecto (asegúrate de que ROLE_USER existe en tu BD)
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new AppException("msg.error.role-not-found", "ROLE_USER"));
         user.setRoles(Collections.singletonList(userRole));
 
-        // Guardamos el usuario primero para que tenga un ID generado
+        // 5. El usuario empieza desactivado hasta que confirme el email (si usas tokens)
+        user.setEnabled(false);
+
         userRepository.save(user);
-
-        // Generamos el token de verificación asociado a este usuario
-        String token = verificationTokenService.createVerificationToken(user);
-
-        // Enviamos el email
-        emailService.sendRegistrationConfirmationEmail(user.getEmail(), user.getFirstName(), token);
     }
 }
