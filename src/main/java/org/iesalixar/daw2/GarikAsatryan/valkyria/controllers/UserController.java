@@ -25,7 +25,7 @@ public class UserController {
      * Solo accesible para ADMIN o MANAGER gracias a la jerarquía de roles.
      */
     @GetMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     public ResponseEntity<Page<UserDTO>> getAllUsers(
             @RequestParam(required = false) String search,
             Pageable pageable) {
@@ -36,7 +36,7 @@ public class UserController {
      * Obtiene los detalles de un usuario por ID.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
@@ -47,7 +47,7 @@ public class UserController {
      * Crea un usuario desde el panel de administración.
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserRegistrationDTO dto) {
         UserDTO created = userService.createUser(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -57,7 +57,7 @@ public class UserController {
      * Actualiza un usuario existente.
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRegistrationDTO dto) {
@@ -68,7 +68,7 @@ public class UserController {
      * Elimina un usuario.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

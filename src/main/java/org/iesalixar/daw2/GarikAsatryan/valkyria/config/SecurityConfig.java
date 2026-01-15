@@ -77,7 +77,7 @@ public class SecurityConfig {
                                 "/stripe/**").permitAll()
 
                         // Protegemos explícitamente la zona de administración de Thymeleaf
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/admin/**").hasAnyRole("ROLE_ADMIN", "ROLE_MANAGER")
 
                         // Cualquier otra petición requiere estar autenticado
                         .anyRequest().authenticated()

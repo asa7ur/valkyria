@@ -21,6 +21,8 @@ public class RegistrationService {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final VerificationTokenService verificationTokenService;
+    private final EmailService emailService;
 
     @Transactional
     public void registerUser(UserRegistrationDTO registrationDTO) {
@@ -35,14 +37,20 @@ public class RegistrationService {
         // 3. Cifrar la contraseña
         user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
 
-        // 4. Asignar rol por defecto (asegúrate de que ROLE_USER existe en tu BD)
+        // 4. Asignar rol por defecto
         Role userRole = roleRepository.findByName("ROLE_USER")
                 .orElseThrow(() -> new AppException("msg.error.role-not-found", "ROLE_USER"));
         user.setRoles(Collections.singletonList(userRole));
 
-        // 5. El usuario empieza desactivado hasta que confirme el email (si usas tokens)
+        // 5. El usuario empieza desactivado hasta que confirme el email
         user.setEnabled(false);
 
         userRepository.save(user);
+
+        // Generamos el token de verificación asociado a este usuario
+        String token = verificationTokenService.createVerificationToken(user);
+
+        // Enviamos el email
+        emailService.sendRegistrationConfirmationEmail(user.getEmail(), user.getFirstName(), token);
     }
 }

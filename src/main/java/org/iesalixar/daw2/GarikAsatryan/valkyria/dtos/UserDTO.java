@@ -22,5 +22,5 @@ public class UserDTO {
     private String phone;
     private LocalDate birthDate;
     private boolean enabled;
-    private List<String> roles; // Solo los nombres de los roles: ["ROLE_ADMIN", "ROLE_USER"]
+    private List<String> roles;
 }
