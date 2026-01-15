@@ -41,6 +41,12 @@ public class SponsorService {
         return sponsorPage.map(sponsorMapper::toDTO);
     }
 
+    public List<SponsorDTO> getAllSponsors() {
+        return sponsorRepository.findAll().stream()
+                .map(sponsorMapper::toDTO)
+                .toList();
+    }
+
     public Optional<SponsorDetailDTO> getSponsorById(Long id) {
         logger.info("Buscando detalle del patrocinador con ID: {}", id);
         return sponsorRepository.findById(id).map(sponsorMapper::toDetailDTO);

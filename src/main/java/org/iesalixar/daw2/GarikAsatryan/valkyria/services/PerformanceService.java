@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -42,6 +43,12 @@ public class PerformanceService {
             performancePage = performanceRepository.findAll(pageable);
         }
         return performancePage.map(performanceMapper::toDTO);
+    }
+
+    public List<PerformanceDTO> getAllPerformances() {
+        return performanceRepository.findAll().stream()
+                .map(performanceMapper::toDTO)
+                .toList();
     }
 
     /**

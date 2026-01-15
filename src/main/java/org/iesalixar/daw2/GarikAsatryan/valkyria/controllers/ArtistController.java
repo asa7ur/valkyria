@@ -24,6 +24,11 @@ public class ArtistController {
 
     // --- ENDPOINTS DE CRUD BÁSICO ---
 
+    @GetMapping("/all")
+    public List<ArtistDTO> getArtists() {
+        return artistService.getAllArtists();
+    }
+
     @GetMapping
     public ResponseEntity<Page<ArtistDTO>> getAllArtists(
             @RequestParam(required = false) String search,

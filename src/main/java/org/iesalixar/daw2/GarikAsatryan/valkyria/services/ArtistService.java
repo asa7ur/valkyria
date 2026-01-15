@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +47,12 @@ public class ArtistService {
                 : artistRepository.findAll(pageable);
 
         return artistPage.map(artistMapper::toDTO);
+    }
+
+    public List<ArtistDTO> getAllArtists() {
+        return artistRepository.findAll().stream()
+                .map(artistMapper::toDTO)
+                .toList();
     }
 
     /**

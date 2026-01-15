@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/sponsors")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -20,6 +22,13 @@ import org.springframework.web.multipart.MultipartFile;
 public class SponsorController {
 
     private final SponsorService sponsorService;
+
+    // --- ENDPOINTS DE CRUD BÁSICO ---
+
+    @GetMapping("/all")
+    public List<SponsorDTO> getSponsors() {
+        return sponsorService.getAllSponsors();
+    }
 
     @GetMapping
     public ResponseEntity<Page<SponsorDTO>> getAllSponsors(
@@ -50,6 +59,8 @@ public class SponsorController {
         sponsorService.deleteSponsor(id);
         return ResponseEntity.noContent().build();
     }
+
+    // --- ENDPOINTS DE GESTIÓN DE IMÁGENES ---
 
     @PostMapping("/{id}/image")
     public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
