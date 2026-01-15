@@ -32,7 +32,13 @@ public class PdfGeneratorService {
 
         // Información del Pedido
         document.add(new Paragraph("Pedido ID: " + order.getId()));
-        document.add(new Paragraph("Explorador: " + order.getUser().getFirstName() + " " + order.getUser().getLastName()));
+
+        // Lógica para manejar usuario registrado o invitado en el PDF
+        String explorerName = (order.getUser() != null)
+                ? order.getUser().getFirstName() + " " + order.getUser().getLastName()
+                : "Invitado (" + order.getGuestEmail() + ")";
+        document.add(new Paragraph("Explorador: " + explorerName));
+
         document.add(new Paragraph(" "));
 
         // Generar una "tarjeta" por cada Ticket

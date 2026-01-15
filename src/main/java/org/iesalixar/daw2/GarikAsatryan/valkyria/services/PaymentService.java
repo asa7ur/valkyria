@@ -12,7 +12,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Order;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -96,7 +95,7 @@ public class PaymentService {
 
                 // 2. Procesos secundarios protegidos (Soft Fail)
                 // Si esto falla, el pedido sigue como PAID, lo cual es correcto.
-                enviarDocumentacion(order);
+                sendDocumentation(order);
             }
         }
     }
@@ -122,14 +121,16 @@ public class PaymentService {
     /**
      * Lógica de envío de PDF y Email encapsulada para no romper la transacción principal.
      */
-    private void enviarDocumentacion(Order order) {
+    private void sendDocumentation(Order order) {
         try {
             byte[] pdfBytes = pdfGeneratorService.generateOrderPdf(order);
             emailService.sendOrderConfirmationEmail(order, pdfBytes);
-            logger.info("Documentación enviada por email al usuario: {}", order.getUser().getEmail());
+
+            String recipientEmail = (order.getUser() != null) ? order.getUser().getEmail() : order.getGuestEmail();
+            logger.info("Documentación enviada por email al usuario: {}", recipientEmail);
+
         } catch (Exception e) {
             logger.error("Error al enviar la documentación del pedido #{}: {}", order.getId(), e.getMessage());
-            // No relanzamos la excepción para no hacer rollback del pago.
         }
     }
 }

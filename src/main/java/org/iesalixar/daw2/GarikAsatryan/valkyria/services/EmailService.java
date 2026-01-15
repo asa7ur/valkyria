@@ -48,17 +48,15 @@ public class EmailService {
 
     /**
      * Envía el correo de confirmación de compra con el PDF adjunto.
+     * Corregido para manejar invitados.
      */
     public void sendOrderConfirmationEmail(Order order, byte[] pdfBytes) throws Exception {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+        // Lógica para manejar usuario registrado o invitado
         String to = (order.getUser() != null) ? order.getUser().getEmail() : order.getGuestEmail();
         String firstName = (order.getUser() != null) ? order.getUser().getFirstName() : "Invitado";
-
-        if (to == null || to.isEmpty()) {
-            throw new Exception("No hay un correo electrónico válido para enviar la confirmación.");
-        }
 
         // Preparar asunto y cuerpo
         String subject = getMessage("msg.order.email.subject", new Object[]{order.getId()});
@@ -74,8 +72,7 @@ public class EmailService {
         helper.addAttachment(fileName, new ByteArrayResource(pdfBytes));
 
         mailSender.send(message);
-        String recipient = (order.getUser() != null) ? order.getUser().getEmail() : order.getGuestEmail();
-        logger.info("Documentación enviada por email a: {}", recipient);
+        logger.info("Confirmación de pedido #{} enviada a: {}", order.getId(), to);
     }
 
     /**
