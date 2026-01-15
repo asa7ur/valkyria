@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/v1/artists")
@@ -41,8 +40,7 @@ public class ArtistController {
 
     @PostMapping
     public ResponseEntity<ArtistDTO> createArtist(
-            @Valid @RequestBody ArtistCreateDTO artistCreateDTO,
-            Locale locale) {
+            @Valid @RequestBody ArtistCreateDTO artistCreateDTO) {
         ArtistDTO created = artistService.createArtist(artistCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -50,8 +48,7 @@ public class ArtistController {
     @PutMapping("/{id}")
     public ResponseEntity<ArtistDTO> updateArtist(
             @PathVariable Long id,
-            @Valid @RequestBody ArtistCreateDTO artistCreateDTO,
-            Locale locale) {
+            @Valid @RequestBody ArtistCreateDTO artistCreateDTO) {
         return ResponseEntity.ok(artistService.updateArtist(id, artistCreateDTO));
     }
 
