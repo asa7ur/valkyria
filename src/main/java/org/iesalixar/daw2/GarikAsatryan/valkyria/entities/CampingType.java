@@ -16,33 +16,20 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldsComparison(
-        first = "stockAvailable",
-        second = "stockTotal",
-        message = "{msg.validation.comparison.invalid}"
-)
 public class CampingType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "{msg.validation.required}")
-    @Size(max = 50, message = "{msg.validation.size}")
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @NotNull(message = "{msg.validation.required}")
-    @PositiveOrZero(message = "{msg.validation.positive}")
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @NotNull(message = "{msg.validation.required}")
-    @PositiveOrZero(message = "{msg.validation.positive}")
     @Column(name = "stock_total", nullable = false)
     private Integer stockTotal;
 
-    @NotNull(message = "{msg.validation.required}")
-    @PositiveOrZero(message = "{msg.validation.positive}")
     @Column(name = "stock_available", nullable = false)
     private Integer stockAvailable;
 }
