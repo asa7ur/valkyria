@@ -18,8 +18,6 @@ public interface SponsorMapper {
 
     SponsorDetailDTO toDetailDTO(Sponsor entity);
 
-    List<SponsorDTO> toDTOList(List<Sponsor> entities);
-
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "image", ignore = true)
     @Mapping(target = "stages", ignore = true)

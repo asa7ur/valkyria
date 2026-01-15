@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.SponsorCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.SponsorDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.SponsorDetailDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Sponsor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Stage;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
