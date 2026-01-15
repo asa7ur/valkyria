@@ -10,10 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Locale;
 
 @RestController
@@ -73,6 +75,19 @@ public class ArtistController {
             @RequestParam("file") MultipartFile file) {
         String baseName = artistService.processAndSaveLogo(id, file);
         return ResponseEntity.ok(baseName);
+    }
+
+    /**
+     * Sube múltiples imágenes a la galería del artista.
+     * Se espera una petición multipart con una key "files" que contenga varios archivos.
+     */
+    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<ArtistImageDTO>> uploadGalleryImages(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) {
+
+        List<ArtistImageDTO> newImages = artistService.uploadArtistImages(id, files);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newImages);
     }
 
     /**

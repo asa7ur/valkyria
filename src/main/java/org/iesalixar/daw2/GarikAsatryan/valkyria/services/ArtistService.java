@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDetailDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistImageDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.ArtistImage;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.ArtistMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.ArtistImageRepository;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -114,6 +118,49 @@ public class ArtistService {
 
         logger.info("Nuevo logo guardado para el artista con ID: {}", id);
         return fileName;
+    }
+
+    /**
+     * Sube múltiples imágenes a la galería de un artista.
+     *
+     * @param artistId ID del artista.
+     * @param files    Array de archivos multipart.
+     * @return Lista de DTOs de las imágenes recién creadas.
+     */
+    @Transactional
+    public List<ArtistImageDTO> uploadArtistImages(Long artistId, MultipartFile[] files) {
+        // 1. Buscar el artista. Si no existe, lanza excepción.
+        Artist artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new AppException("msg.artist.not-found", artistId));
+
+        List<ArtistImage> newImages = new ArrayList<>();
+
+        // 2. Iterar sobre cada archivo recibido
+        for (MultipartFile file : files) {
+            // Ignorar archivos vacíos si se enviaron por error
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            // 3. Guardar el archivo físicamente usando el servicio existente
+            String fileName = fileService.saveFile(file, ARTISTS_FOLDER);
+
+            // 4. Crear la entidad ArtistImage
+            // NOTA: Asumo que ArtistImage tiene un constructor vacío y setters,
+            // o un patrón Builder. Ajusta esto según la definición de tu entidad ArtistImage.
+            ArtistImage image = new ArtistImage();
+            image.setImageUrl(fileName);
+            image.setArtist(artist); // Asociación crucial (lado propietario de la relación)
+
+            newImages.add(image);
+        }
+
+        // 5. Guardar todas las entidades de imagen en lote (más eficiente que una por una)
+        List<ArtistImage> savedImages = artistImageRepository.saveAll(newImages);
+        logger.info("Se han subido {} imágenes para el artista con ID: {}", savedImages.size(), artistId);
+
+        // 6. Devolver los DTOs mapeados
+        return artistMapper.toImageDTOList(savedImages);
     }
 
     /**

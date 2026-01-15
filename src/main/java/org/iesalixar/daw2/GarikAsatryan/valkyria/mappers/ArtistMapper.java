@@ -26,6 +26,8 @@ public interface ArtistMapper {
 
     ArtistImageDTO toImageDTO(ArtistImage entity);
 
+    List<ArtistImageDTO> toImageDTOList(List<ArtistImage> entities);
+
     @Mapping(target = "artist", ignore = true)
         // Importante para evitar recursión infinita
     ArtistImage toImageEntity(ArtistImageDTO dto);
