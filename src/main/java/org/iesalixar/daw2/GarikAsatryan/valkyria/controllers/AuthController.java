@@ -58,7 +58,7 @@ public class AuthController {
         boolean isAdminOrManager = userDetails.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
 
-        String redirectUrl = isAdminOrManager ? "http://localhost:8080/admin/dashboard" : "http://localhost:4200/";
+        String redirectUrl = isAdminOrManager ? "http://localhost:4200/admin/dashboard" : "http://localhost:4200/";
 
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("token", jwt);
