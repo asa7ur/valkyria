@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/artists")
@@ -64,11 +65,11 @@ public class ArtistController {
      * Sube o actualiza el logo del artista.
      */
     @PostMapping("/{id}/logo")
-    public ResponseEntity<String> uploadLogo(
+    public ResponseEntity<Map<String, String>> uploadLogo(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         String baseName = artistService.processAndSaveLogo(id, file);
-        return ResponseEntity.ok(baseName);
+        return ResponseEntity.ok(Map.of("fileName", baseName));
     }
 
     /**
