@@ -1,10 +1,7 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistCreateDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistDetailDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ArtistImageDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.ArtistImage;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
@@ -48,7 +45,7 @@ public class ArtistService {
      * @param pageable   Configuración de paginación (página, tamaño, ordenación)
      * @return Página de DTOs de artistas
      */
-    public Page<ArtistDTO> getAllArtists(String searchTerm, Pageable pageable) {
+    public Page<ArtistAdminDTO> getAllArtists(String searchTerm, Pageable pageable) {
         logger.info("Iniciando búsqueda de artistas. Término: '{}', Página: {}, Tamaño: {}",
                 searchTerm != null ? searchTerm : "SIN FILTRO",
                 pageable.getPageNumber(),
@@ -64,7 +61,7 @@ public class ArtistService {
                 artistPage.getTotalElements());
 
         // Convertir entidades a DTOs usando el mapper
-        return artistPage.map(artistMapper::toDTO);
+        return artistPage.map(artistMapper::toAdminDTO);
     }
 
     /**

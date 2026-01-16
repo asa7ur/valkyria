@@ -30,7 +30,7 @@ public class ArtistController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ArtistDTO>> getAllArtists(
+    public ResponseEntity<Page<ArtistAdminDTO>> getAllArtists(
             @RequestParam(required = false) String search,
             Pageable pageable) {
         return ResponseEntity.ok(artistService.getAllArtists(search, pageable));
