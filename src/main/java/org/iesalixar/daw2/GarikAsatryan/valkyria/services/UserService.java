@@ -3,6 +3,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PasswordChangeDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Role;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
@@ -60,18 +61,28 @@ public class UserService {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new AppException("msg.error.user-not-found", id));
 
-        // Validar si el email ha cambiado y si el nuevo ya existe
         if (!existingUser.getEmail().equals(dto.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
             throw new AppException("msg.register.error.email-exists", dto.getEmail());
         }
 
-        // Actualizamos los campos básicos usando el mapper
+        // Actualizamos campos básicos
         userMapper.updateEntityFromDTO(dto, existingUser);
 
-        // Si el DTO incluyera roles (para un admin), se gestionarían aquí.
+        // 1. Sincronizar el estado de activación
+        existingUser.setEnabled(dto.isEnabled());
+
+        // 2. Gestionar roles si vienen en el DTO
+        if (dto.getRoles() != null) {
+            List<Role> roles = dto.getRoles().stream()
+                    .map(roleName -> roleRepository.findByName(roleName)
+                            .orElseThrow(() -> new AppException("msg.error.role-not-found", roleName)))
+                    .collect(Collectors.toList());
+            existingUser.setRoles(roles);
+        }
 
         User updated = userRepository.save(existingUser);
-        logger.info("Usuario con ID {} actualizado", id);
+        logger.info("Usuario con ID {} actualizado (Email: {}, Enabled: {}, Roles: {})",
+                id, updated.getEmail(), updated.isEnabled(), dto.getRoles());
         return userMapper.toDTO(updated);
     }
 
@@ -109,5 +120,25 @@ public class UserService {
     @Transactional
     public void saveUser(User user) {
         userRepository.save(user);
+    }
+
+    /**
+     * Cambia la contraseña de un usuario tras verificar la contraseña actual.
+     */
+    @Transactional
+    public void changePassword(Long id, PasswordChangeDTO dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException("msg.error.user-not-found", id));
+
+        // 1. Verificar que la contraseña actual es correcta
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw new AppException("msg.error.invalid-current-password");
+        }
+
+        // 2. Cifrar y guardar la nueva contraseña
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+
+        logger.info("Contraseña actualizada para el usuario con ID {}", id);
     }
 }
