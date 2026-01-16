@@ -49,8 +49,4 @@ public class ArtistCreateDTO {
     private String tidalUrl;
 
     private String spotifyUrl;
-
-    private String logo;
-
-    private List<ArtistImageDTO> images;
 }
