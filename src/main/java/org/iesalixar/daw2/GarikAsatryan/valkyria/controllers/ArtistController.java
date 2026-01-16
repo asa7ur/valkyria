@@ -24,13 +24,8 @@ public class ArtistController {
 
     // --- ENDPOINTS DE CRUD BÁSICO ---
 
-    @GetMapping("/all")
-    public List<ArtistDTO> getArtists() {
-        return artistService.getAllArtists();
-    }
-
     @GetMapping
-    public ResponseEntity<Page<ArtistAdminDTO>> getAllArtists(
+    public ResponseEntity<Page<ArtistDTO>> getAllArtists(
             @RequestParam(required = false) String search,
             Pageable pageable) {
         return ResponseEntity.ok(artistService.getAllArtists(search, pageable));

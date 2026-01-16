@@ -45,7 +45,7 @@ public class ArtistService {
      * @param pageable   Configuración de paginación (página, tamaño, ordenación)
      * @return Página de DTOs de artistas
      */
-    public Page<ArtistAdminDTO> getAllArtists(String searchTerm, Pageable pageable) {
+    public Page<ArtistDTO> getAllArtists(String searchTerm, Pageable pageable) {
         logger.info("Iniciando búsqueda de artistas. Término: '{}', Página: {}, Tamaño: {}",
                 searchTerm != null ? searchTerm : "SIN FILTRO",
                 pageable.getPageNumber(),
@@ -61,24 +61,7 @@ public class ArtistService {
                 artistPage.getTotalElements());
 
         // Convertir entidades a DTOs usando el mapper
-        return artistPage.map(artistMapper::toAdminDTO);
-    }
-
-    /**
-     * Obtiene la lista completa de artistas sin paginación.
-     * Útil para selectores o dropdowns en la interfaz.
-     *
-     * @return Lista de todos los artistas como DTOs
-     */
-    public List<ArtistDTO> getAllArtists() {
-        logger.info("Recuperando lista completa de artistas");
-
-        List<ArtistDTO> artists = artistRepository.findAll().stream()
-                .map(artistMapper::toDTO)
-                .toList();
-
-        logger.debug("Total de artistas recuperados: {}", artists.size());
-        return artists;
+        return artistPage.map(artistMapper::toDTO);
     }
 
     /**

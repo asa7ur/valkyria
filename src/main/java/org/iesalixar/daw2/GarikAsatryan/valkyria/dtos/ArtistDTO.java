@@ -14,6 +14,8 @@ import java.util.List;
 public class ArtistDTO {
     private Long id;
     private String name;
+    private String phone;
+    private String email;
     private String genre;
     private String country;
     private String logo;
