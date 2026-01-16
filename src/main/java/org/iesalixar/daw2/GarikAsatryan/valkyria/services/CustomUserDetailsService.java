@@ -69,7 +69,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // Paso 3: Construir el objeto UserDetails de Spring Security
         // Este objeto contiene toda la información necesaria para la autenticación y autorización
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
+        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
                 .password(user.getPassword()) // Password ya debe estar encriptado (BCrypt)
                 .authorities(authorities) // Roles con prefijo ROLE_
                 .accountExpired(false) // La cuenta no está expirada
@@ -77,10 +77,5 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .credentialsExpired(false) // Las credenciales no están expiradas
                 .disabled(!user.isEnabled()) // Estado basado en el campo 'enabled' de la entidad User
                 .build();
-
-        logger.info("Usuario {} autenticado exitosamente con {} roles",
-                email, authorities.length);
-
-        return userDetails;
     }
 }
