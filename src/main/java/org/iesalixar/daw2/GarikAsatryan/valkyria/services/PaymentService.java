@@ -17,50 +17,107 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+/**
+ * Servicio de integración con Stripe para procesamiento de pagos.
+ * Gestiona el ciclo completo de pago: creación de sesiones, webhooks y confirmaciones.
+ * <p>
+ * Flujo de pago:
+ * 1. Usuario completa el pedido → createStripeSession()
+ * 2. Usuario redirigido a Stripe Checkout
+ * 3. Usuario paga en Stripe
+ * 4. Stripe envía webhook → processWebhookEvent()
+ * 5. Sistema confirma pedido y envía documentación
+ * <p>
+ * IMPORTANTE: Este servicio implementa "Soft Fail" para procesos secundarios
+ * (generación PDF, envío email) para no comprometer la confirmación del pago.
+ */
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
 
+    // Inyección de dependencias mediante constructor (Lombok @RequiredArgsConstructor)
     private final OrderService orderService;
     private final PdfGeneratorService pdfGeneratorService;
     private final EmailService emailService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper; // Para parsear JSON de Stripe
 
+    // Credenciales de Stripe desde application.properties
     @Value("${stripe.secret.key}")
     private String secretKey;
 
     @Value("${stripe.webhook.secret}")
     private String endpointSecret;
 
+    // URL base de la aplicación para redirecciones
     @Value("${app.url}")
     private String appUrl;
 
+    /**
+     * Inicializa la configuración de Stripe tras la construcción del bean.
+     * Este método se ejecuta automáticamente una vez después de la inyección de dependencias.
+     * Configura la API key global para todas las llamadas posteriores a Stripe.
+     */
     @PostConstruct
     public void init() {
         Stripe.apiKey = secretKey;
+        logger.info("Stripe API inicializada correctamente con la secret key configurada");
     }
 
     /**
-     * Crea una sesión de pago en Stripe.
-     * Convierte el precio a céntimos (movePointRight(2)).
+     * Crea una sesión de pago (Checkout Session) en Stripe.
+     * Redirige al usuario a la página de pago de Stripe con la sesión creada.
+     * <p>
+     * Proceso:
+     * 1. Configura el método de pago (tarjeta)
+     * 2. Establece el modo de pago único (no suscripción)
+     * 3. Asocia el ID del pedido como referencia
+     * 4. Define URLs de retorno (éxito/cancelación)
+     * 5. Crea el item de línea con el precio total
+     * 6. Invoca la API de Stripe para crear la sesión
+     * <p>
+     * IMPORTANTE sobre precios:
+     * - Stripe trabaja en céntimos (o unidad mínima de la moneda)
+     * - Por eso usamos movePointRight(2) para convertir 19.99€ → 1999 céntimos
+     *
+     * @param order Pedido para el cual crear la sesión de pago
+     * @return URL de la sesión de Stripe donde redirigir al usuario
+     * @throws Exception si hay error en la comunicación con Stripe API
      */
     public String createStripeSession(Order order) throws Exception {
+        logger.info("Iniciando creación de sesión de Stripe para pedido #{}", order.getId());
+        logger.debug("Precio del pedido: {} EUR", order.getTotalPrice());
+
+        // Conversión de precio a céntimos para Stripe
+        long amountInCents = order.getTotalPrice().movePointRight(2).longValue();
+        logger.debug("Precio convertido para Stripe: {} céntimos", amountInCents);
+
+        // Construcción de parámetros de la sesión de Checkout
         SessionCreateParams params = SessionCreateParams.builder()
+                // Método de pago aceptado: solo tarjeta en este caso
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+
+                // Modo de pago: PAYMENT (pago único) vs SUBSCRIPTION
                 .setMode(SessionCreateParams.Mode.PAYMENT)
+
+                // ID de referencia para asociar la sesión con nuestro pedido
+                // Esto nos permite identificar el pedido en el webhook
                 .setClientReferenceId(order.getId().toString())
-                // URLs a las que volverá el usuario desde Stripe
+
+                // URLs de retorno tras completar o cancelar el pago
+                // {CHECKOUT_SESSION_ID} es reemplazado por Stripe con el ID real
                 .setSuccessUrl(appUrl + "/purchase/success?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(appUrl + "/purchase/cancel")
+
+                // Item de línea: lo que el usuario está comprando
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
-                                .setQuantity(1L)
+                                .setQuantity(1L) // 1 pedido completo
                                 .setPriceData(
                                         SessionCreateParams.LineItem.PriceData.builder()
-                                                .setCurrency("eur")
-                                                .setUnitAmount(order.getTotalPrice().movePointRight(2).longValue())
+                                                .setCurrency("eur") // Moneda europea
+                                                .setUnitAmount(amountInCents) // Precio en céntimos
                                                 .setProductData(
                                                         SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                                                 .setName("Pedido Valkyria #" + order.getId())
@@ -72,65 +129,185 @@ public class PaymentService {
                 )
                 .build();
 
+        logger.debug("Parámetros de sesión construidos. Invocando Stripe API...");
+
+        // Llamada a la API de Stripe para crear la sesión
         Session session = Session.create(params);
+
+        logger.info("✓ Sesión de Stripe creada exitosamente. Session ID: {}, URL: {}",
+                session.getId(), session.getUrl());
+
+        // Retornar la URL donde redirigir al usuario
         return session.getUrl();
     }
 
     /**
-     * Procesa el evento de Webhook enviado por Stripe cuando el pago se completa.
+     * Procesa eventos de webhook enviados por Stripe cuando ocurren eventos importantes.
+     * Este método es invocado por el controlador que recibe POST requests de Stripe.
+     * <p>
+     * Flujo de seguridad:
+     * 1. Verifica la firma del webhook para autenticidad
+     * 2. Deserializa el evento
+     * 3. Si es "checkout.session.completed" → confirma el pago
+     * 4. Extrae el ID del pedido de la sesión
+     * 5. Actualiza el estado del pedido en BD (CRITICAL)
+     * 6. Intenta enviar documentación (BEST EFFORT)
+     * <p>
+     * ESTRATEGIA "SOFT FAIL":
+     * - La confirmación del pago SIEMPRE se ejecuta y persiste
+     * - El envío de PDF/email es secundario y falla silenciosamente si hay problemas
+     * - Esto evita perder pagos confirmados por problemas de email/PDF
+     *
+     * @param payload   JSON del evento enviado por Stripe (cuerpo raw del request)
+     * @param sigHeader Header 'Stripe-Signature' para validar autenticidad
+     * @throws Exception si la firma es inválida o hay error crítico
      */
     @Transactional
     public void processWebhookEvent(String payload, String sigHeader) throws Exception {
-        Event event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
+        logger.info("Procesando evento de webhook de Stripe");
+        logger.debug("Payload recibido (primeros 100 chars): {}",
+                payload.substring(0, Math.min(100, payload.length())));
 
+        // Paso 1: Construir y verificar el evento usando la firma
+        // Esto garantiza que el webhook realmente viene de Stripe y no ha sido manipulado
+        Event event;
+        try {
+            event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
+            logger.debug("Evento verificado exitosamente. Tipo: {}", event.getType());
+        } catch (Exception e) {
+            logger.error("Firma de webhook inválida. Posible intento de fraude: {}", e.getMessage());
+            throw e; // Re-lanzar para que el controlador retorne 400
+        }
+
+        // Paso 2: Procesar solo eventos de sesiones completadas
         if ("checkout.session.completed".equals(event.getType())) {
+            logger.info("Evento de tipo 'checkout.session.completed' detectado");
+
+            // Paso 3: Extraer el ID del pedido de la sesión
             String orderIdStr = extractOrderId(event);
 
             if (orderIdStr != null) {
-                Long orderId = Long.parseLong(orderIdStr);
+                logger.debug("ID de pedido extraído de la sesión: {}", orderIdStr);
 
-                // 1. Confirmar pago en DB (Esto es lo más importante)
-                Order order = orderService.confirmPayment(orderId);
-                logger.info("Pago confirmado para el pedido #{}", orderId);
+                try {
+                    Long orderId = Long.parseLong(orderIdStr);
 
-                // 2. Procesos secundarios protegidos (Soft Fail)
-                // Si esto falla, el pedido sigue como PAID, lo cual es correcto.
-                sendDocumentation(order);
+                    // ==================== PROCESO CRÍTICO ====================
+                    // Paso 4: Confirmar el pago en la base de datos
+                    // ESTO ES LO MÁS IMPORTANTE - debe ejecutarse siempre
+                    Order order = orderService.confirmPayment(orderId);
+                    logger.info("✓ Pago confirmado exitosamente para pedido #{} (Total: {} EUR)",
+                            orderId, order.getTotalPrice());
+                    // =========================================================
+
+                    // ==================== PROCESOS SECUNDARIOS ====================
+                    // Paso 5: Intentar enviar documentación (PDF + Email)
+                    // Si esto falla, el pedido YA está confirmado, lo cual es correcto
+                    sendDocumentation(order);
+                    // ==============================================================
+
+                } catch (NumberFormatException e) {
+                    logger.error("ID de pedido inválido en webhook: {}", orderIdStr, e);
+                }
+            } else {
+                logger.warn("No se pudo extraer el ID del pedido del evento de Stripe");
             }
+        } else {
+            logger.debug("Evento de tipo '{}' ignorado (solo procesamos checkout.session.completed)",
+                    event.getType());
         }
     }
 
     /**
-     * Intenta extraer el ID del pedido de la sesión de Stripe.
+     * Extrae el ID del pedido del objeto Session de Stripe.
+     * Intenta dos métodos para máxima compatibilidad:
+     * 1. Deserialización directa del objeto Session
+     * 2. Parsing manual del JSON raw si falla el método 1
+     * <p>
+     * El ID del pedido se almacenó en 'client_reference_id' al crear la sesión.
+     *
+     * @param event Evento de Stripe que contiene los datos de la sesión
+     * @return ID del pedido como String, o null si no se puede extraer
      */
     private String extractOrderId(Event event) {
+        logger.debug("Extrayendo ID de pedido del evento de Stripe");
+
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
 
+        // Método 1: Deserialización automática del objeto Session
         return dataObjectDeserializer.getObject()
-                .map(stripeObject -> ((Session) stripeObject).getClientReferenceId())
+                .map(stripeObject -> {
+                    Session session = (Session) stripeObject;
+                    String clientRefId = session.getClientReferenceId();
+                    logger.debug("ID extraído mediante deserialización: {}", clientRefId);
+                    return clientRefId;
+                })
                 .orElseGet(() -> {
+                    // Método 2: Fallback - parsing manual del JSON raw
+                    logger.debug("Deserialización automática falló, usando parsing manual del JSON");
                     try {
                         JsonNode node = objectMapper.readTree(dataObjectDeserializer.getRawJson());
-                        return node.has("client_reference_id") ? node.get("client_reference_id").asText() : null;
+
+                        if (node.has("client_reference_id")) {
+                            String clientRefId = node.get("client_reference_id").asText();
+                            logger.debug("ID extraído mediante parsing JSON: {}", clientRefId);
+                            return clientRefId;
+                        } else {
+                            logger.warn("Campo 'client_reference_id' no encontrado en JSON raw");
+                            return null;
+                        }
                     } catch (Exception e) {
+                        logger.error("Error al parsear JSON raw del evento: {}", e.getMessage(), e);
                         return null;
                     }
                 });
     }
 
     /**
-     * Lógica de envío de PDF y Email encapsulada para no romper la transacción principal.
+     * Lógica encapsulada de envío de documentación (PDF + Email).
+     * Este método implementa "Soft Fail" - captura todas las excepciones
+     * para no comprometer la confirmación del pago que ya ocurrió.
+     * <p>
+     * Si falla el envío, el pedido sigue siendo válido (PAID) y el usuario
+     * puede solicitar el PDF manualmente desde su panel de pedidos.
+     * <p>
+     * Proceso:
+     * 1. Genera el PDF del pedido con todos los tickets y campings
+     * 2. Envía email con el PDF adjunto
+     * 3. Registra el éxito o fallo en logs
+     *
+     * @param order Pedido para el cual generar y enviar documentación
      */
     private void sendDocumentation(Order order) {
+        logger.info("Iniciando envío de documentación para pedido #{}", order.getId());
+
         try {
+            // Paso 1: Generar el PDF del pedido
+            logger.debug("Generando PDF del pedido #{}...", order.getId());
             byte[] pdfBytes = pdfGeneratorService.generateOrderPdf(order);
+            logger.debug("PDF generado correctamente ({} bytes)", pdfBytes.length);
+
+            // Paso 2: Enviar email con el PDF adjunto
+            String recipientEmail = (order.getUser() != null)
+                    ? order.getUser().getEmail()
+                    : order.getGuestEmail();
+
+            logger.debug("Enviando email con PDF a: {}", recipientEmail);
             emailService.sendOrderConfirmationEmail(order, pdfBytes);
 
-            String recipientEmail = (order.getUser() != null) ? order.getUser().getEmail() : order.getGuestEmail();
-            logger.info("Documentación enviada por email al usuario: {}", recipientEmail);
+            logger.info("✓ Documentación enviada exitosamente por email a: {}", recipientEmail);
 
         } catch (Exception e) {
-            logger.error("Error al enviar la documentación del pedido #{}: {}", order.getId(), e.getMessage());
+            // SOFT FAIL: Solo registramos el error, no propagamos la excepción
+            // El pedido ya está confirmado (PAID), lo cual es lo más importante
+            logger.error("⚠ Error al enviar documentación del pedido #{} (El pago SÍ fue confirmado). " +
+                            "El usuario puede descargar el PDF desde su panel. Error: {}",
+                    order.getId(), e.getMessage(), e);
+
+            // Aquí podríamos implementar lógica adicional como:
+            // - Marcar el pedido para reintento de envío
+            // - Enviar notificación a administradores
+            // - Almacenar en una cola de reintentos
         }
     }
 }
