@@ -18,18 +18,25 @@ public interface ArtistMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "performances", ignore = true)
+    @Mapping(target = "logo", ignore = true)
+    @Mapping(target = "images", ignore = true)
     Artist toEntity(ArtistCreateDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "performances", ignore = true)
+    @Mapping(target = "logo", ignore = true)
+    @Mapping(target = "images", ignore = true)
     void updateEntityFromDTO(ArtistCreateDTO dto, @MappingTarget Artist entity);
 
     ArtistImageDTO toImageDTO(ArtistImage entity);
 
+    ArtistLogoDTO toLogoDTO(Artist entity);
+
+    List<ArtistLogoDTO> toLogoDTOList(List<Artist> entities);
+
     List<ArtistImageDTO> toImageDTOList(List<ArtistImage> entities);
 
     @Mapping(target = "artist", ignore = true)
-        // Importante para evitar recursión infinita
     ArtistImage toImageEntity(ArtistImageDTO dto);
 
     /**

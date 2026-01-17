@@ -86,6 +86,15 @@ public class ArtistService {
         return result;
     }
 
+    public List<ArtistLogoDTO> getArtistLogo() {
+        logger.info("Iniciando recuperación de logos de todos los artistas");
+
+        List<Artist> artists = artistRepository.findByLogoIsNotNull();
+
+        logger.debug("Mapeando {} artistas filtrados a ArtistLogoDTO", artists.size());
+        return artistMapper.toLogoDTOList(artists);
+    }
+
     /**
      * Crea un nuevo artista en el sistema.
      * Valida que el email no esté duplicado antes de crear.

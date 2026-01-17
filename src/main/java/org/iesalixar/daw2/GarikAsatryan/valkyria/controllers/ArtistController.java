@@ -39,6 +39,11 @@ public class ArtistController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/logo")
+    public ResponseEntity<List<ArtistLogoDTO>> getArtistLogo() {
+        return ResponseEntity.ok(artistService.getArtistLogo());
+    }
+
     @PostMapping
     public ResponseEntity<ArtistDTO> createArtist(
             @Valid @RequestBody ArtistCreateDTO artistCreateDTO) {

@@ -61,7 +61,7 @@ INSERT IGNORE INTO artists (name, phone, email, genre, country, description, log
                             youtube_url, tidal_url, spotify_url)
 VALUES ('Gojira', '+33 1 42 67 00 00', 'contact@gojira-music.com', 'Progressive Death Metal', 'France',
         'Taking their name from the original Japanese pronunciation of Godzilla, French heavy metal quartet Gojira have gone from the utmost obscurity in the first half of their career to widespread global recognition in the second. Combining elements of thrash, death, math, groove, progressive, and post-metal with philosophical and environment-themed lyrics, the band found mainstream favor in 2012 with the release of their fifth long-player, L\'Enfant Sauvage, and doubled-down on that success with 2016\'s Grammy-nominated Magma and 2021\'s hard-hitting and versatile Fortitude. In 2024, Gojira became the first heavy metal act to perform at an Olympic opening ceremony. ',
-        'cdcbb431-ad1b-473a-be99-1b9e23e4b426', 'https://www.gojira-music.com/',
+        '8f460969-b0b5-4a7d-80f0-8c7a52d23721', 'https://www.gojira-music.com/',
         'https://www.instagram.com/gojiraofficial', 'https://www.tiktok.com/@gojiraband',
         'https://www.youtube.com/gojira', 'https://tidal.com/artist/3883303',
         'https://open.spotify.com/embed/track/2pZsQqXFgcY03vRyZxSQhU?utm_source=generator'),
