@@ -12,4 +12,6 @@ public class TicketTypeDTO {
     private Long id;
     private String name;
     private BigDecimal price;
+    private Integer stockTotal;
+    private Integer stockAvailable;
 }
