@@ -401,7 +401,18 @@ VALUES ('08879063-dc9f-42aa-bb1f-c48ccdc4a6a5', 1),
        ('fbcd37b3-caec-4a75-8387-e113225d322b', 30),
        ('171dc7ea-24b3-4442-a8bc-ff2a8b18128e', 31),
        ('e0294ea0-db77-46a6-931b-f2664ace25ce', 32),
-       ('64ce0cb0-fd67-4872-bfad-ab0fde497ab8', 32);
+       ('64ce0cb0-fd67-4872-bfad-ab0fde497ab8', 32),
+       ('9b20b4d9-910f-442a-a187-230cb065ddbb', 33),
+       ('7cf8f9e2-2508-4caa-b927-b64ecd6f7442', 34),
+       ('4a522422-7e1a-4cea-9b4c-e98c462f8402', 35),
+       ('ce2cba3c-ecbe-46ff-aee8-36a48375a6e6', 36),
+       ('977ccb0a-593e-4f8f-9986-95ca0b55eff5', 37),
+       ('80aec869-5c72-4274-8e67-de23b7094178', 38),
+       ('7f444b81-c9d4-44b9-a3a2-1dfa0de559d2', 39),
+       ('0d0ed197-749a-436c-adbe-e6476c7830b9', 40),
+       ('e661720b-c160-4de8-b469-abea52888c1f', 41),
+       ('16afd8e9-721b-4181-8054-3c22ac7142b3', 42),
+       ('760077ad-4026-4384-9e49-ddad1a19afb2', 43);
 
 
 -- MIÉRCOLES 5 DE AGOSTO DE 2026
