@@ -1,7 +1,7 @@
 INSERT IGNORE INTO users (email, password, enabled, first_name, last_name, birth_date, phone)
 VALUES ('garik@email.com', '$2a$12$8LssFTKG6GY.pl7Xd.K8DOHFHWwUUm1wOzQ5L4LT9uoIB2XbXYw9a', true, 'Garik', 'Asatryan',
         '1996-12-30', '666666666'),
-       ('paula@email.com', '$2a$12$jKTxYa0fSqWzb2UrhHxR8uDn5/ArJrh4VQ1zNxJHCU7.LsZmEUE/.', true, 'Paula', 'Martín',
+       ('paula@email.com', '$2a$12$D7fBGvd3cCwHCr57fgOcPuj.tC8V.4YSDosNV/1wtyA4En9lBJF5O', true, 'Paula', 'Martín',
         '1995-08-24', '777777777'),
        ('nacho@email.com', '$2a$12$hE8vq6Ng0aKvV60dpP8gRecFR5fT5G7mTjP61ZnnjIOAa2n0mbDjC', true, 'Nacho', 'Muñoz',
         '1996-01-27', '676767676');
