@@ -1,10 +1,13 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.security.JwtAuthenticationFilter;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +22,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -28,7 +32,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // Permite usar @PreAuthorize en tus controladores
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -41,11 +45,24 @@ public class SecurityConfig {
     }
 
     /**
-     * Define la jerarquía de roles: ADMIN incluye a MANAGER.
+     * Jerarquía de roles: El ADMIN manda sobre el MANAGER, y este sobre el USER.
      */
     @Bean
     public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN > ROLE_MANAGER");
+        return RoleHierarchyImpl.fromHierarchy("""
+                ROLE_ADMIN > ROLE_MANAGER
+                ROLE_MANAGER > ROLE_USER
+                """);
+    }
+
+    /**
+     * Indispensable para que la jerarquía funcione dentro de las anotaciones @PreAuthorize
+     */
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(RoleHierarchy roleHierarchy) {
+        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+        handler.setRoleHierarchy(roleHierarchy);
+        return handler;
     }
 
     @Bean
@@ -58,11 +75,8 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(authorize -> authorize
-                        // Rutas públicas
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
                                 "/api/**",
@@ -72,33 +86,25 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**",
                                 "/uploads/**",
-                                "/stripe/**").permitAll()
+                                "/stripe/**")
+                        .permitAll()
 
-                        // Protegemos la zona de administración
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
 
-                        // Cualquier otra petición
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
+                        // IMPORTANTE: Devolvemos errores 401/403 en lugar de redirecciones para Angular
                         .authenticationEntryPoint((request, response, authException) -> {
-                            // Si no está autenticado e intenta ir a /admin, redirigir a /
-                            response.sendRedirect("/");
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No autorizado");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            // Si está autenticado pero NO es ADMIN/MANAGER, redirigir a /
-                            response.sendRedirect("/");
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Permisos insuficientes");
                         })
                 )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("http://localhost:4200")
-                        .deleteCookies("jwt")
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                )
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+                // Registramos el filtro JWT antes del filtro de autenticación por defecto
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .authenticationProvider(authenticationProvider());
 
         return http.build();
     }
@@ -106,12 +112,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permitimos el origen de Angular
         configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Es vital permitir estos headers para que el interceptor de Angular funcione
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-        // Necesario para que las cookies de sesión/JWT puedan viajar entre puertos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -2,25 +2,33 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
-    @Value("${app.jwt.secret}")
-    private String secretKey;
+
+    private final KeyPair jwtKeyPair;
+
+    @Value("${jwt.expiration}")
+    private long jwtExpiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
 
     public String generateToken(UserDetails userDetails) {
@@ -34,8 +42,8 @@ public class JwtService {
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
-                .signWith(getSignInKey())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(jwtKeyPair.getPrivate(), Jwts.SIG.RS256)
                 .compact();
     }
 
@@ -52,21 +60,12 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getSignInKey())
+                // IMPORTANTE: Verificamos con la Clave PÚBLICA
+                .verifyWith(jwtKeyPair.getPublic())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-    }
-
-    private SecretKey getSignInKey() {
-        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
