@@ -1,9 +1,9 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.AuthRequestDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.AuthResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.security.JwtService;
@@ -12,11 +12,13 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.services.UserService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.VerificationTokenService;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -25,11 +27,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
     private final RegistrationService registrationService;
     private final MessageSource messageSource;
@@ -37,38 +37,41 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request, HttpServletResponse response) {
-        // 1. Autenticar credenciales (Si fallan, Spring lanza AuthenticationException)
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.get("username"), request.get("password"))
-        );
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO authRequest) {
+        try {
+            // 1. Autenticar credenciales
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
 
-        // 2. Cargar usuario y generar Token
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.get("username"));
-        User userEntity = userService.getUserByEmailEntity(userDetails.getUsername());
-        final String jwt = jwtService.generateToken(userDetails);
+            // 2. Cargar datos del usuario y generar Token
+            String username = authentication.getName();
+            User userEntity = userService.getUserByEmailEntity(username);
+            final String jwt = jwtService.generateToken((UserDetails) authentication.getPrincipal());
 
-        // 3. Cookie para Thymeleaf
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(24 * 60 * 60);
-        response.addCookie(jwtCookie);
+            // 3. Lógica de redirección para el frontend
+            boolean isAdminOrManager = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
 
-        // 4. Lógica de redirección
-        boolean isAdminOrManager = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
+            String redirectUrl = isAdminOrManager ? "http://localhost:4200/admin/dashboard" : "http://localhost:4200/";
 
-        String redirectUrl = isAdminOrManager ? "http://localhost:4200/admin/dashboard" : "http://localhost:4200/";
+            // 4. Devolver DTO completo
+            return ResponseEntity.ok(new AuthResponseDTO(
+                    jwt,
+                    "Login successful",
+                    username,
+                    userEntity.getFirstName(),
+                    authentication.getAuthorities(),
+                    redirectUrl
+            ));
 
-        Map<String, Object> responseBody = new HashMap<>();
-        responseBody.put("token", jwt);
-        responseBody.put("username", userDetails.getUsername());
-        responseBody.put("firstName", userEntity.getFirstName());
-        responseBody.put("roles", userDetails.getAuthorities());
-        responseBody.put("redirectUrl", redirectUrl);
-
-        return ResponseEntity.ok(responseBody);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResponseDTO(null, "Credenciales inválidas. Por favor, verifica tus datos."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AuthResponseDTO(null, "Ocurrió un error inesperado."));
+        }
     }
 
     @PostMapping("/register")
@@ -103,5 +106,11 @@ public class AuthController {
                     response.put("error", "Invalid token");
                     return ResponseEntity.badRequest().body(response);
                 });
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<AuthResponseDTO> handleException(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new AuthResponseDTO(null, "Error: " + e.getMessage()));
     }
 }

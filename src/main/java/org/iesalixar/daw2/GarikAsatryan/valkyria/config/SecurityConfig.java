@@ -32,7 +32,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Permite usar @PreAuthorize en tus controladores
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -44,9 +44,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Jerarquía de roles: El ADMIN manda sobre el MANAGER, y este sobre el USER.
-     */
     @Bean
     public RoleHierarchy roleHierarchy() {
         return RoleHierarchyImpl.fromHierarchy("""
@@ -55,9 +52,6 @@ public class SecurityConfig {
                 """);
     }
 
-    /**
-     * Indispensable para que la jerarquía funcione dentro de las anotaciones @PreAuthorize
-     */
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(RoleHierarchy roleHierarchy) {
         DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
@@ -79,22 +73,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
-                                "/api/**",
-                                "/register/**",
-                                "/login",
+                                "/api/v1/auth/**",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
                                 "/uploads/**",
                                 "/stripe/**")
                         .permitAll()
-
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
-
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
-                        // IMPORTANTE: Devolvemos errores 401/403 en lugar de redirecciones para Angular
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No autorizado");
                         })
@@ -102,7 +91,6 @@ public class SecurityConfig {
                             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Permisos insuficientes");
                         })
                 )
-                // Registramos el filtro JWT antes del filtro de autenticación por defecto
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(authenticationProvider());
 

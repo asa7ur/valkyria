@@ -34,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        // 1. Validar si el encabezado tiene el formato correcto para Bearer token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -45,11 +44,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
 
-            // 2. Si hay usuario y no está ya autenticado en el contexto actual
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-                // 3. Si el token es íntegro y no ha expirado
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -57,16 +54,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails.getAuthorities()
                     );
 
-                    // Añadimos detalles de la IP/sesión de la petición original
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    // Establecemos la identidad del usuario en Spring Security
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
         } catch (Exception e) {
-            // Si el token es inválido o ha sido manipulado, simplemente ignoramos y seguimos
-            // La seguridad de Spring (HttpSecurity) se encargará de denegar el acceso después.
             logger.error("No se pudo extraer el usuario del token: " + e.getMessage());
         }
 
