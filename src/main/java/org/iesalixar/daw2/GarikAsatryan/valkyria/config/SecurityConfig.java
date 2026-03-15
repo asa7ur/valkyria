@@ -73,12 +73,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
-                                "/api/v1/auth/**",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
                                 "/uploads/**",
-                                "/stripe/**")
+                                "/api/v1/auth/**",
+                                "/api/v1/webhooks/**")
                         .permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .anyRequest().authenticated()
