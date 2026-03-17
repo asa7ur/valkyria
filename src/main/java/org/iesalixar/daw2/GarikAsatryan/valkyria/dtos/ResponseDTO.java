@@ -1,5 +1,6 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL) // Evita enviar campos null al cliente
 public class ResponseDTO<T> {
     private LocalDateTime timestamp;
     private int status;
@@ -17,7 +19,7 @@ public class ResponseDTO<T> {
     private T data;
 
     public static <T> ResponseDTO<T> success(String message, T data) {
-        return new ResponseDTO<>(LocalDateTime.now(), 200, message, null, data);
+        return success(message, data, null);
     }
 
     public static <T> ResponseDTO<T> success(String message, T data, FilterDTO filter) {
