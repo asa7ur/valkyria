@@ -25,6 +25,10 @@ public class ResponseDTO<T> {
     }
 
     public static <T> ResponseDTO<T> error(int status, String message) {
-        return new ResponseDTO<>(LocalDateTime.now(), status, message, null, null);
+        return error(status, message, null);
+    }
+
+    public static <T> ResponseDTO<T> error(int status, String message, T data) {
+        return new ResponseDTO<>(LocalDateTime.now(), status, message, null, data);
     }
 }
