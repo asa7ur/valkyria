@@ -9,10 +9,16 @@ public class AppException extends RuntimeException {
     private final Object[] args;
     private final HttpStatus status;
 
+    // Constructor por defecto
     public AppException(String messageKey, Object... args) {
+        this(messageKey, HttpStatus.BAD_REQUEST, args);
+    }
+
+    // Constructor que permite especificar el estado HTTP
+    public AppException(String messageKey, HttpStatus status, Object... args) {
         super(messageKey);
         this.messageKey = messageKey;
+        this.status = status;
         this.args = args;
-        this.status = HttpStatus.BAD_REQUEST;
     }
 }
