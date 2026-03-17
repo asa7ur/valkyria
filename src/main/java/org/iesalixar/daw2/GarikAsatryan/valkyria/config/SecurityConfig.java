@@ -2,7 +2,6 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.security.JwtAuthenticationFilter;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

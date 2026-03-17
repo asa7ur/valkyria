@@ -6,7 +6,7 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.AuthRequestDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.AuthResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.security.JwtService;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.utils.JwtUtil;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.RegistrationService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.UserService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.VerificationTokenService;
@@ -30,7 +30,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
     private final RegistrationService registrationService;
     private final MessageSource messageSource;
     private final VerificationTokenService verificationTokenService;
@@ -47,7 +47,7 @@ public class AuthController {
             // 2. Cargar datos del usuario y generar Token
             String username = authentication.getName();
             User userEntity = userService.getUserByEmailEntity(username);
-            final String jwt = jwtService.generateToken((UserDetails) authentication.getPrincipal());
+            final String jwt = jwtUtil.generateToken((UserDetails) authentication.getPrincipal());
 
             // 3. Lógica de redirección para el frontend
             boolean isAdminOrManager = authentication.getAuthorities().stream()

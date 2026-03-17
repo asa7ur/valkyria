@@ -1,4 +1,4 @@
-package org.iesalixar.daw2.GarikAsatryan.valkyria.security;
+package org.iesalixar.daw2.GarikAsatryan.valkyria.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
-public class JwtService {
+public class JwtUtil {
 
     private final KeyPair jwtKeyPair;
 
