@@ -41,14 +41,13 @@ public class ArtistService {
     public List<ArtistDTO> getAllArtists(FilterDTO filterDTO) {
         String sortProperty = (filterDTO.getOrder() == null || filterDTO.getOrder().isBlank())
                 ? "id" : filterDTO.getOrder();
-        // Configuración de paginación y ordenación dinámica
+
         Sort sort = "desc".equalsIgnoreCase(filterDTO.getOrderBy())
                 ? Sort.by(sortProperty).descending()
                 : Sort.by(sortProperty).ascending();
 
-        int page = (filterDTO.getPage() < 1) ? 0 : filterDTO.getPage() - 1;
-
-        int size = (filterDTO.getItemsPerPage() < 1) ? 10 : filterDTO.getItemsPerPage();
+        int page = Math.max(filterDTO.getPage(), 0);
+        int size = (filterDTO.getItemsPerPage() < 1) ? 9 : filterDTO.getItemsPerPage();
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -57,6 +56,7 @@ public class ArtistService {
                 : artistRepository.findAll(pageable);
 
         filterDTO.setTotalPages(artistPage.getTotalPages());
+        filterDTO.setTotalElements((int) artistPage.getTotalElements());
 
         return artistPage.getContent().stream()
                 .map(artistMapper::toDTO)

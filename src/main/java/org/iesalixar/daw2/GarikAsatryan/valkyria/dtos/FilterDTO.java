@@ -12,4 +12,5 @@ public class FilterDTO {
     private String orderBy;
     private String search;
     private int totalPages;
+    private int totalElements;
 }
