@@ -39,19 +39,23 @@ public class ArtistService {
      * Actualiza el FilterDTO con el total de páginas.
      */
     public List<ArtistDTO> getAllArtists(FilterDTO filterDTO) {
+        String sortProperty = (filterDTO.getOrder() == null || filterDTO.getOrder().isBlank())
+                ? "id" : filterDTO.getOrder();
         // Configuración de paginación y ordenación dinámica
         Sort sort = "desc".equalsIgnoreCase(filterDTO.getOrderBy())
-                ? Sort.by(filterDTO.getOrder()).descending()
-                : Sort.by(filterDTO.getOrder()).ascending();
+                ? Sort.by(sortProperty).descending()
+                : Sort.by(sortProperty).ascending();
 
-        // El page en FilterDTO suele ser 1-based para el cliente, PageRequest es 0-based
-        Pageable pageable = PageRequest.of(filterDTO.getPage() - 1, filterDTO.getItemsPerPage(), sort);
+        int page = (filterDTO.getPage() < 1) ? 0 : filterDTO.getPage() - 1;
+
+        int size = (filterDTO.getItemsPerPage() < 1) ? 10 : filterDTO.getItemsPerPage();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<Artist> artistPage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
                 ? artistRepository.searchArtists(filterDTO.getSearch(), pageable)
                 : artistRepository.findAll(pageable);
 
-        // Actualizamos el DTO de filtro con la información de la base de datos
         filterDTO.setTotalPages(artistPage.getTotalPages());
 
         return artistPage.getContent().stream()

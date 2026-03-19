@@ -76,8 +76,7 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**",
                                 "/uploads/**",
-                                "/api/v1/auth/**",
-                                "/api/v1/webhooks/**")
+                                "/api/v1/**")
                         .permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .anyRequest().authenticated()
