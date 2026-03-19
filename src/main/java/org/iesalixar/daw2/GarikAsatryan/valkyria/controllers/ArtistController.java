@@ -4,8 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.ArtistService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,89 +22,83 @@ import java.util.Map;
 public class ArtistController {
 
     private final ArtistService artistService;
-
-    // --- ENDPOINTS DE CRUD BÁSICO ---
+    private final MessageSource messageSource; // Inyección para i18n
 
     @GetMapping
-    public ResponseEntity<Page<ArtistDTO>> getAllArtists(
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
-        return ResponseEntity.ok(artistService.getAllArtists(search, pageable));
+    public ResponseEntity<ResponseDTO<List<ArtistDTO>>> getAllArtists(@ModelAttribute FilterDTO filterDTO) {
+        List<ArtistDTO> data = artistService.getAllArtists(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.artist.list.success"), data, filterDTO));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ArtistDetailDTO> getArtistById(@PathVariable Long id) {
-        return artistService.getArtistById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ResponseDTO<ArtistDetailDTO>> getArtistById(@PathVariable Long id) {
+        ArtistDetailDTO data = artistService.getArtistById(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.artist.get.success"), data));
     }
 
     @GetMapping("/logo")
-    public ResponseEntity<List<ArtistLogoDTO>> getArtistLogo() {
-        return ResponseEntity.ok(artistService.getArtistLogo());
+    public ResponseEntity<ResponseDTO<List<ArtistLogoDTO>>> getArtistLogo() {
+        List<ArtistLogoDTO> logos = artistService.getArtistLogo();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.artist.logo.list.success"), logos));
     }
 
     @PostMapping
-    public ResponseEntity<ArtistDTO> createArtist(
-            @Valid @RequestBody ArtistCreateDTO artistCreateDTO) {
+    public ResponseEntity<ResponseDTO<ArtistDTO>> createArtist(@Valid @RequestBody ArtistCreateDTO artistCreateDTO) {
         ArtistDTO created = artistService.createArtist(artistCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseDTO.success(getMessage("msg.artist.create.success"), created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ArtistDTO> updateArtist(
+    public ResponseEntity<ResponseDTO<ArtistDTO>> updateArtist(
             @PathVariable Long id,
             @Valid @RequestBody ArtistCreateDTO artistCreateDTO) {
-        return ResponseEntity.ok(artistService.updateArtist(id, artistCreateDTO));
+        ArtistDTO updated = artistService.updateArtist(id, artistCreateDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.artist.update.success"), updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteArtist(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deleteArtist(@PathVariable Long id) {
         artistService.deleteArtist(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.artist.delete.success"), null));
     }
 
-    // --- ENDPOINTS DE GESTIÓN DE IMÁGENES ---
-
-    /**
-     * Sube o actualiza el logo del artista.
-     */
     @PostMapping("/{id}/logo")
-    public ResponseEntity<Map<String, String>> uploadLogo(
+    public ResponseEntity<ResponseDTO<Map<String, String>>> uploadLogo(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         String baseName = artistService.processAndSaveLogo(id, file);
-        return ResponseEntity.ok(Map.of("fileName", baseName));
+        return ResponseEntity.ok(ResponseDTO.success(
+                getMessage("msg.artist.logo.upload.success"),
+                Map.of("fileName", baseName)
+        ));
     }
 
-    /**
-     * Sube múltiples imágenes a la galería del artista.
-     * Se espera una petición multipart con una key "files" que contenga varios archivos.
-     */
     @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<List<ArtistImageDTO>> uploadGalleryImages(
+    public ResponseEntity<ResponseDTO<List<ArtistImageDTO>>> uploadGalleryImages(
             @PathVariable Long id,
             @RequestParam("files") MultipartFile[] files) {
-
         List<ArtistImageDTO> newImages = artistService.uploadArtistImages(id, files);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newImages);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseDTO.success(getMessage("msg.artist.images.upload.success"), newImages));
     }
 
-    /**
-     * Elimina el logo actual.
-     */
     @DeleteMapping("/{id}/logo")
-    public ResponseEntity<Void> deleteLogo(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deleteLogo(@PathVariable Long id) {
         artistService.deleteLogo(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.artist.logo.delete.success"), null));
+    }
+
+    @DeleteMapping("/images/{imageId}")
+    public ResponseEntity<ResponseDTO<Void>> deleteGalleryImage(@PathVariable Long imageId) {
+        artistService.deleteArtistImage(imageId);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.artist.images.delete.success"), null));
     }
 
     /**
-     * Elimina una imagen específica de la galería.
+     * Utilidad para obtener mensajes traducidos según el locale de la petición.
      */
-    @DeleteMapping("/images/{imageId}")
-    public ResponseEntity<Void> deleteGalleryImage(@PathVariable Long imageId) {
-        artistService.deleteArtistImage(imageId);
-        return ResponseEntity.noContent().build();
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
