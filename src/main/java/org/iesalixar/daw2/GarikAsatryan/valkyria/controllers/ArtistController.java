@@ -17,12 +17,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/artists")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class ArtistController {
 
     private final ArtistService artistService;
-    private final MessageSource messageSource; // Inyección para i18n
+    private final MessageSource messageSource;
 
     @GetMapping
     public ResponseEntity<ResponseDTO<List<ArtistDTO>>> getAllArtists(@ModelAttribute FilterDTO filterDTO) {

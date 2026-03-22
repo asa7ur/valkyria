@@ -1,6 +1,7 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.ArtistImage;
@@ -22,41 +23,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio de negocio para la gestión de ARTISTAS.
+ * Proporciona operaciones CRUD completas con validación de artistas.
+ */
 @Service
 @RequiredArgsConstructor
 public class ArtistService {
     private static final Logger logger = LoggerFactory.getLogger(ArtistService.class);
 
+    // Inyección de dependencias mediante constructor (Lombok @RequiredArgsConstructor)
     private final ArtistRepository artistRepository;
     private final ArtistImageRepository artistImageRepository;
     private final ArtistMapper artistMapper;
     private final FileService fileService;
+    private final PaginationComponent paginationComponent;
 
     private static final String ARTISTS_FOLDER = "artists";
 
     /**
      * Obtiene una lista de artistas basada en filtros.
-     * Actualiza el FilterDTO con el total de páginas.
+     * Actualiza el FilterDTO con los metadatos de paginación.
      */
     public List<ArtistDTO> getAllArtists(FilterDTO filterDTO) {
-        String sortProperty = (filterDTO.getOrder() == null || filterDTO.getOrder().isBlank())
-                ? "id" : filterDTO.getOrder();
+        logger.info("Iniciando búsqueda de artistas. Término: '{}', Página: {}, Tamaño: {}",
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
 
-        Sort sort = "desc".equalsIgnoreCase(filterDTO.getOrderBy())
-                ? Sort.by(sortProperty).descending()
-                : Sort.by(sortProperty).ascending();
-
-        int page = Math.max(filterDTO.getPage(), 0);
-        int size = (filterDTO.getItemsPerPage() < 1) ? 9 : filterDTO.getItemsPerPage();
-
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
 
         Page<Artist> artistPage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
                 ? artistRepository.searchArtists(filterDTO.getSearch(), pageable)
                 : artistRepository.findAll(pageable);
 
-        filterDTO.setTotalPages(artistPage.getTotalPages());
-        filterDTO.setTotalElements((int) artistPage.getTotalElements());
+        paginationComponent.updateFilterMetadata(filterDTO, artistPage);
+
+        logger.debug("Artistas encontrados: {} de {} totales",
+                artistPage.getNumberOfElements(),
+                artistPage.getTotalElements());
 
         return artistPage.getContent().stream()
                 .map(artistMapper::toDTO)

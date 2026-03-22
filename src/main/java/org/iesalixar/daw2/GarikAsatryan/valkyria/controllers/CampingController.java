@@ -4,50 +4,64 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.CampingService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/campings")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class CampingController {
 
     private final CampingService campingService;
+    private final MessageSource messageSource;
 
     @GetMapping
-    public ResponseEntity<Page<CampingDTO>> getAllCampings(
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
-        return ResponseEntity.ok(campingService.getAllCampings(search, pageable));
+    public ResponseEntity<ResponseDTO<List<CampingDTO>>> getAllCampings(@ModelAttribute FilterDTO filterDTO) {
+        List<CampingDTO> data = campingService.getAllCampings(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.camping.list.success"), data, filterDTO));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CampingDTO> getCampingById(@PathVariable Long id) {
-        return campingService.getCampingById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ResponseDTO<CampingDTO>> getCampingById(@PathVariable Long id) {
+        CampingDTO data = campingService.getCampingById(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.camping.get.success"), data));
     }
 
     @PostMapping
-    public ResponseEntity<CampingDTO> createCamping(@Valid @RequestBody CampingCreateDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(campingService.createCamping(dto));
+    public ResponseEntity<ResponseDTO<CampingDTO>> createCamping(@Valid @RequestBody CampingCreateDTO dto) {
+        CampingDTO created = campingService.createCamping(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseDTO.success(getMessage("msg.camping.create.success"), created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CampingDTO> updateCamping(
+    public ResponseEntity<ResponseDTO<CampingDTO>> updateCamping(
             @PathVariable Long id,
             @Valid @RequestBody CampingCreateDTO dto) {
-        return ResponseEntity.ok(campingService.updateCamping(id, dto));
+        CampingDTO updated = campingService.updateCamping(id, dto);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.camping.update.success"), updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCamping(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deleteCamping(@PathVariable Long id) {
         campingService.deleteCamping(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.camping.delete.success"), null));
+    }
+
+    /**
+     * Utilidad para obtener mensajes traducidos según el locale de la petición.
+     */
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
