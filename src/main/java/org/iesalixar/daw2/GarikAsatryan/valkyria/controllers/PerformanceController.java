@@ -9,8 +9,6 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.PerformanceService;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +32,12 @@ public class PerformanceController {
             @ModelAttribute FilterDTO filterDTO) {
         List<PerformanceDTO> data = performanceService.getAllPerformances(filterDTO);
         return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.performance.list.success"), data, filterDTO));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ResponseDTO<List<PerformanceDTO>>> getPerformances() {
+        List<PerformanceDTO> data = performanceService.getAllPerformances();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.performance.list.success"), data));
     }
 
     /**

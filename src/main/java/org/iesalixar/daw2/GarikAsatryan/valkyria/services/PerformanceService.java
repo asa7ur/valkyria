@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -77,6 +76,17 @@ public class PerformanceService {
         return performancePage.getContent().stream()
                 .map(performanceMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    public List<PerformanceDTO> getAllPerformances() {
+        logger.info("Recuperando lista completa de actuaciones");
+
+        List<PerformanceDTO> performances = performanceRepository.findAll().stream()
+                .map(performanceMapper::toDTO)
+                .toList();
+
+        logger.debug("Total de actuaciones recuperadas: {}", performances.size());
+        return performances;
     }
 
     /**
