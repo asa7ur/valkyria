@@ -2,9 +2,13 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PerformanceCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PerformanceDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.PerformanceService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,36 +19,30 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/performances")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class PerformanceController {
 
     private final PerformanceService performanceService;
+    private final MessageSource messageSource;
 
     /**
      * Obtiene todas las actuaciones con paginación y búsqueda.
      * GET /api/v1/performances?search=rock&page=0&size=10
      */
     @GetMapping
-    public ResponseEntity<Page<PerformanceDTO>> getAllPerformances(
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
-        return ResponseEntity.ok(performanceService.getAllPerformances(search, pageable));
-    }
-
-    @GetMapping("/all")
-    public List<PerformanceDTO> getPerformances() {
-        return performanceService.getAllPerformances();
+    public ResponseEntity<ResponseDTO<List<PerformanceDTO>>> getAllPerformances(
+            @ModelAttribute FilterDTO filterDTO) {
+        List<PerformanceDTO> data = performanceService.getAllPerformances(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.performance.list.success"), data, filterDTO));
     }
 
     /**
      * Obtiene una actuación por su ID.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<PerformanceDTO> getPerformanceById(@PathVariable Long id) {
-        return performanceService.getPerformanceById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ResponseDTO<PerformanceDTO>> getPerformanceById(@PathVariable Long id) {
+        PerformanceDTO data = performanceService.getPerformanceById(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.performance.get.success"), data));
     }
 
     /**
@@ -52,28 +50,37 @@ public class PerformanceController {
      * El @Valid disparará FieldsComparison y PerformanceOverlap.
      */
     @PostMapping
-    public ResponseEntity<PerformanceDTO> createPerformance(
-            @Valid @RequestBody PerformanceCreateDTO performanceCreateDTO) {
+    public ResponseEntity<ResponseDTO<PerformanceDTO>> createPerformance(
+            @Valid @RequestBody PerformanceCreateDTO dto) {
+        PerformanceDTO created = performanceService.createPerformance(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(performanceService.createPerformance(performanceCreateDTO));
+                .body(ResponseDTO.success(getMessage("msg.performance.create.success"), created));
     }
 
     /**
      * Actualiza una actuación existente.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<PerformanceDTO> updatePerformance(
+    public ResponseEntity<ResponseDTO<PerformanceDTO>> updatePerformance(
             @PathVariable Long id,
-            @Valid @RequestBody PerformanceCreateDTO performanceCreateDTO) {
-        return ResponseEntity.ok(performanceService.updatePerformance(id, performanceCreateDTO));
+            @Valid @RequestBody PerformanceCreateDTO dto) {
+        PerformanceDTO updated = performanceService.updatePerformance(id, dto);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.performance.update.success"), updated));
     }
 
     /**
      * Elimina una actuación.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePerformance(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deletePerformance(@PathVariable Long id) {
         performanceService.deletePerformance(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.performance.delete.success"), null));
+    }
+
+    /**
+     * Utilidad para obtener mensajes traducidos según el locale de la petición.
+     */
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }

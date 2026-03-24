@@ -1,6 +1,8 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PerformanceCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PerformanceDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Artist;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Servicio de negocio para la gestión de actuaciones (performances).
@@ -45,82 +48,45 @@ public class PerformanceService {
     private final ArtistRepository artistRepository;
     private final StageRepository stageRepository;
     private final PerformanceMapper performanceMapper;
+    private final PaginationComponent paginationComponent;
 
     /**
      * Obtiene actuaciones paginadas con búsqueda opcional.
      * Permite filtrar por nombre de artista o nombre de escenario.
      * Utilizado para mostrar el programa del festival de forma paginada.
-     *
-     * @param searchTerm Término de búsqueda opcional (artista o escenario)
-     * @param pageable   Configuración de paginación (página, tamaño, ordenación)
-     * @return Página de DTOs de actuaciones
      */
-    public Page<PerformanceDTO> getAllPerformances(String searchTerm, Pageable pageable) {
+    public List<PerformanceDTO> getAllPerformances(FilterDTO filterDTO) {
         logger.info("Iniciando búsqueda de actuaciones. Término: '{}', Página: {}, Tamaño: {}",
-                searchTerm != null ? searchTerm : "SIN FILTRO",
-                pageable.getPageNumber(),
-                pageable.getPageSize());
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
 
-        // Decisión: búsqueda filtrada o listado completo
-        Page<Performance> performancePage;
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            logger.debug("Aplicando búsqueda con término: '{}'", searchTerm);
-            performancePage = performanceRepository.searchPerformances(searchTerm, pageable);
-        } else {
-            logger.debug("Recuperando todas las actuaciones sin filtro");
-            performancePage = performanceRepository.findAll(pageable);
-        }
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
+
+        Page<Performance> performancePage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
+                ? performanceRepository.searchPerformances(filterDTO.getSearch(), pageable)
+                : performanceRepository.findAll(pageable);
+
+        paginationComponent.updateFilterMetadata(filterDTO, performancePage);
 
         logger.debug("Actuaciones encontradas: {} de {} totales",
                 performancePage.getNumberOfElements(),
                 performancePage.getTotalElements());
 
         // Convertir entidades a DTOs usando el mapper
-        return performancePage.map(performanceMapper::toDTO);
-    }
-
-    /**
-     * Obtiene la lista completa de todas las actuaciones sin paginación.
-     * Útil para visualizaciones de calendario completo o exportaciones.
-     *
-     * @return Lista de todas las actuaciones como DTOs
-     */
-    public List<PerformanceDTO> getAllPerformances() {
-        logger.info("Recuperando lista completa de actuaciones");
-
-        List<PerformanceDTO> performances = performanceRepository.findAll().stream()
+        return performancePage.getContent().stream()
                 .map(performanceMapper::toDTO)
-                .toList();
-
-        logger.debug("Total de actuaciones recuperadas: {}", performances.size());
-        return performances;
+                .collect(Collectors.toList());
     }
 
     /**
      * Obtiene el detalle de una actuación específica por su ID.
      * Incluye información completa del artista y escenario asociados.
-     *
-     * @param id ID de la actuación
-     * @return Optional con el DTO de la actuación o vacío si no existe
      */
-    public Optional<PerformanceDTO> getPerformanceById(Long id) {
-        logger.info("Buscando detalle de la actuación con ID: {}", id);
-
-        Optional<PerformanceDTO> result = performanceRepository.findById(id)
-                .map(performanceMapper::toDTO);
-
-        if (result.isPresent()) {
-            PerformanceDTO perf = result.get();
-            logger.debug("Actuación encontrada: {} en {} ({} - {})",
-                    perf.getArtist().getName(),
-                    perf.getStage().getName(),
-                    perf.getStartTime(),
-                    perf.getEndTime());
-        } else {
-            logger.warn("No se encontró actuación con ID: {}", id);
-        }
-
-        return result;
+    public PerformanceDTO getPerformanceById(Long id) {
+        return performanceRepository.findById(id)
+                .map(performanceMapper::toDTO)
+                .orElseThrow(() -> new AppException("msg.performance.not-found", id));
     }
 
     /**

@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class ResponseDTO<T> {
     private LocalDateTime timestamp;
     private int status;
+    private boolean success;
     private String message;
     private FilterDTO filter;
     private T data;
@@ -23,7 +24,7 @@ public class ResponseDTO<T> {
     }
 
     public static <T> ResponseDTO<T> success(String message, T data, FilterDTO filter) {
-        return new ResponseDTO<>(LocalDateTime.now(), 200, message, filter, data);
+        return new ResponseDTO<>(LocalDateTime.now(), 200, true, message, filter, data);
     }
 
     public static <T> ResponseDTO<T> error(int status, String message) {
@@ -31,6 +32,6 @@ public class ResponseDTO<T> {
     }
 
     public static <T> ResponseDTO<T> error(int status, String message, T data) {
-        return new ResponseDTO<>(LocalDateTime.now(), status, message, null, data);
+        return new ResponseDTO<>(LocalDateTime.now(), status, false, message, null, data);
     }
 }
