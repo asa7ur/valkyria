@@ -1,10 +1,8 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingCreateDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderRequestDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderResponseDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketCreateDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.CampingMapper;
@@ -24,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Servicio de negocio para la gestión de pedidos (orders).
@@ -53,32 +52,30 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final TicketMapper ticketMapper;
     private final CampingMapper campingMapper;
+    private final PaginationComponent paginationComponent;
 
-    /**
-     * Obtiene todos los pedidos del sistema con paginación y búsqueda opcional.
-     * Utilizado principalmente en el panel de control administrativo.
-     *
-     * @param searchTerm Término de búsqueda opcional (email, ID, estado)
-     * @param pageable   Configuración de paginación (página, tamaño, ordenación)
-     * @return Página de DTOs con información de los pedidos
-     */
-    public Page<OrderResponseDTO> getAllOrders(String searchTerm, Pageable pageable) {
+    public List<OrderDTO> getAllOrders(FilterDTO filterDTO) {
         logger.info("Recuperando pedidos. Término: '{}', Página: {}, Tamaño: {}",
-                searchTerm != null ? searchTerm : "SIN FILTRO",
-                pageable.getPageNumber(),
-                pageable.getPageSize());
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
 
-        // Decisión: búsqueda filtrada o listado completo
-        Page<Order> orderPage = (searchTerm != null && !searchTerm.trim().isEmpty())
-                ? orderRepository.searchOrders(searchTerm, pageable)
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
+
+        Page<Order> orderPage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isEmpty())
+                ? orderRepository.searchOrders(filterDTO.getSearch(), pageable)
                 : orderRepository.findAll(pageable);
+
+        paginationComponent.updateFilterMetadata(filterDTO, orderPage);
 
         logger.debug("Pedidos encontrados: {} de {} totales",
                 orderPage.getNumberOfElements(),
                 orderPage.getTotalElements());
 
         // Convertir entidades a DTOs de respuesta
-        return orderPage.map(orderMapper::toResponseDTO);
+        return orderPage.getContent().stream()
+                .map(orderMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -89,7 +86,7 @@ public class OrderService {
      * @param email Email del usuario
      * @return Lista de DTOs con todos los pedidos del usuario ordenados cronológicamente
      */
-    public List<OrderResponseDTO> getOrdersByUser(String email) {
+    public List<OrderDTO> getOrdersByUser(String email) {
         logger.info("Recuperando historial de pedidos para usuario: {}", email);
 
         // Consulta optimizada con ordenación en BD
@@ -97,7 +94,7 @@ public class OrderService {
 
         logger.debug("Total de pedidos encontrados para {}: {}", email, orders.size());
 
-        return orderMapper.toResponseDTOList(orders);
+        return orderMapper.toDTOList(orders);
     }
 
     /**
@@ -116,6 +113,28 @@ public class OrderService {
                     logger.error("Pedido con ID {} no encontrado", id);
                     return new AppException("msg.error.order-not-found", id);
                 });
+    }
+
+    @Transactional
+    public OrderDTO updateOrder(Long id, OrderCreateDTO dto) {
+        Order order = getOrderEntityById(id);
+        orderMapper.updateEntityFromDTO(dto, order);
+        return orderMapper.toDTO(orderRepository.save(order));
+    }
+
+    /**
+     * Elimina un pedido por su ID.
+     *
+     * @param id ID del pedido a eliminar.
+     * @throws AppException Si el pedido no existe.
+     */
+    @Transactional
+    public void deleteOrder(Long id) {
+        if (!orderRepository.existsById(id)) {
+            logger.error("Pedido con ID {} no encontrado", id);
+            throw new AppException("msg.error.order-not-found", id);
+        }
+        orderRepository.deleteById(id);
     }
 
     /**
@@ -142,7 +161,7 @@ public class OrderService {
      * @throws AppException si hay problemas de stock, tipos no encontrados, etc.
      */
     @Transactional
-    public Order executeOrder(OrderRequestDTO request, User user) {
+    public Order executeOrder(OrderCreateDTO request, User user) {
         // Log diferenciado según tipo de compra
         if (user != null) {
             logger.info("Iniciando procesamiento de pedido para usuario registrado: {}",

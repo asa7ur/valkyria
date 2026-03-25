@@ -2,8 +2,10 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderRequestDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderResponseDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderCreateDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.OrderDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Order;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
@@ -11,6 +13,8 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.services.OrderService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.PaymentService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.PdfGeneratorService;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.UserService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,22 +27,48 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class OrderController {
 
     private final OrderService orderService;
     private final UserService userService;
     private final PaymentService paymentService;
     private final PdfGeneratorService pdfGeneratorService;
+    private final MessageSource messageSource;
+
+    /**
+     * Devuelve todos los pedidos
+     */
+    @GetMapping
+    public ResponseEntity<ResponseDTO<List<OrderDTO>>> getAllOrders(@ModelAttribute FilterDTO filterDTO) {
+        List<OrderDTO> data = orderService.getAllOrders(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.order.list.success"), data, filterDTO));
+    }
 
     /**
      * Devuelve el historial de pedidos del usuario autenticado.
      */
     @GetMapping("/my-orders")
-    public ResponseEntity<List<OrderResponseDTO>> getMyOrders(Authentication authentication) {
+    public ResponseEntity<ResponseDTO<List<OrderDTO>>> getMyOrders(Authentication authentication) {
         // authentication.getName() devuelve el email del usuario logueado (desde el JWT)
-        List<OrderResponseDTO> orders = orderService.getOrdersByUser(authentication.getName());
-        return ResponseEntity.ok(orders);
+        List<OrderDTO> orders = orderService.getOrdersByUser(authentication.getName());
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.order.history.success"), orders));
+    }
+
+    /**
+     * Actualiza los datos de un pedido.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseDTO<OrderDTO>> updateOrder(@PathVariable Long id, @Valid @RequestBody OrderCreateDTO dto) {
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.order.update.success"), orderService.updateOrder(id, dto)));
+    }
+
+    /**
+     * Borra un pedido.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseDTO<Void>> deleteOrder(@PathVariable Long id) {
+        orderService.deleteOrder(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.order.delete.success"), null));
     }
 
     /**
@@ -48,8 +78,8 @@ public class OrderController {
      * 3. Devuelve la URL de Stripe para que Angular redireccione al usuario.
      */
     @PostMapping
-    public ResponseEntity<Map<String, String>> checkout(
-            @Valid @RequestBody OrderRequestDTO request,
+    public ResponseEntity<ResponseDTO<Map<String, String>>> checkout(
+            @Valid @RequestBody OrderCreateDTO request,
             Authentication authentication) throws Exception {
 
         User user = null;
@@ -65,7 +95,10 @@ public class OrderController {
         String stripeUrl = paymentService.createStripeSession(order);
 
         // Devolvemos la URL para que el frontend haga: window.location.href = res.url;
-        return ResponseEntity.ok(Map.of("url", stripeUrl));
+        return ResponseEntity.ok(ResponseDTO.success(
+                getMessage("msg.order.checkout.success"),
+                Map.of("url", stripeUrl)
+        ));
     }
 
     /**
@@ -88,5 +121,9 @@ public class OrderController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Valkyria_Pedido_" + id + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
+    }
+
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
