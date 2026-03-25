@@ -55,14 +55,6 @@ public class OrderController {
     }
 
     /**
-     * Actualiza los datos de un pedido.
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<ResponseDTO<OrderDTO>> updateOrder(@PathVariable Long id, @Valid @RequestBody OrderCreateDTO dto) {
-        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.order.update.success"), orderService.updateOrder(id, dto)));
-    }
-
-    /**
      * Borra un pedido.
      */
     @DeleteMapping("/{id}")

@@ -115,13 +115,6 @@ public class OrderService {
                 });
     }
 
-    @Transactional
-    public OrderDTO updateOrder(Long id, OrderCreateDTO dto) {
-        Order order = getOrderEntityById(id);
-        orderMapper.updateEntityFromDTO(dto, order);
-        return orderMapper.toDTO(orderRepository.save(order));
-    }
-
     /**
      * Elimina un pedido por su ID.
      *
