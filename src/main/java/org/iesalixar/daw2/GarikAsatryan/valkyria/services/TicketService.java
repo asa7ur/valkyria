@@ -1,6 +1,8 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Ticket;
@@ -16,31 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Servicio de negocio para la gestión de tickets individuales (entradas).
- * Gestiona los tickets/entradas vendidas para el festival.
- * <p>
- * Diferencia entre Ticket y TicketType:
- * - TicketType: Categoría/tipo de entrada (VIP, General, Early Bird) - datos maestros
- * - Ticket: Entrada individual vendida a una persona específica - transaccional
- * <p>
- * Responsabilidades:
- * - Consulta de tickets vendidos (para administración y reportes)
- * - Gestión manual de tickets individuales (casos especiales)
- * - Asociación de tickets con tipos de entrada
- * <p>
- * NOTA IMPORTANTE:
- * Los tickets normalmente se crean automáticamente durante el proceso de compra
- * (ver OrderService.executeOrder()). Este servicio proporciona operaciones CRUD
- * para gestión administrativa o casos especiales (cortesías, cambios, etc.).
- * <p>
- * Cada ticket tiene:
- * - Asistente (nombre y apellidos)
- * - Tipo de entrada (TicketType)
- * - Código QR único para validación
- * - Asociación con un pedido (Order)
+ * Servicio de negocio para la gestión de TICKETS.
+ * Proporciona operaciones CRUD completas con validación de tipos de tickets.
  */
 @Service
 @RequiredArgsConstructor
@@ -51,75 +34,47 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketTypeRepository ticketTypeRepository;
     private final TicketMapper ticketMapper;
+    private final PaginationComponent paginationComponent;
 
     /**
-     * Obtiene tickets paginados con búsqueda opcional.
-     * Permite filtrar por nombre del asistente, tipo de entrada o código QR.
-     * Utilizado principalmente en panel administrativo para gestión y reportes.
-     *
-     * @param searchTerm Término de búsqueda opcional (nombre, tipo, QR)
-     * @param pageable   Configuración de paginación (página, tamaño, ordenación)
-     * @return Página de DTOs de tickets
+     * Obtiene una lista de tickets basada en filtros.
+     * Actualiza el FilterDTO con los metadatos de paginación.
      */
-    public Page<TicketDTO> getAllTickets(String searchTerm, Pageable pageable) {
+    public List<TicketDTO> getAllTickets(FilterDTO filterDTO) {
         logger.info("Iniciando búsqueda de entradas. Término: '{}', Página: {}, Tamaño: {}",
-                searchTerm != null ? searchTerm : "SIN FILTRO",
-                pageable.getPageNumber(),
-                pageable.getPageSize());
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
 
-        // Decisión: búsqueda filtrada o listado completo
-        Page<Ticket> ticketPage;
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            logger.debug("Aplicando búsqueda con término: '{}'", searchTerm);
-            ticketPage = ticketRepository.searchTickets(searchTerm, pageable);
-        } else {
-            logger.debug("Recuperando todas las entradas sin filtro");
-            ticketPage = ticketRepository.findAll(pageable);
-        }
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
+
+        Page<Ticket> ticketPage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
+                ? ticketRepository.searchTickets(filterDTO.getSearch(), pageable)
+                : ticketRepository.findAll(pageable);
+
+        paginationComponent.updateFilterMetadata(filterDTO, ticketPage);
 
         logger.debug("Entradas encontradas: {} de {} totales",
                 ticketPage.getNumberOfElements(),
                 ticketPage.getTotalElements());
 
-        // Convertir entidades a DTOs usando el mapper
-        return ticketPage.map(ticketMapper::toDTO);
+        return ticketPage.getContent().stream()
+                .map(ticketMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     /**
      * Obtiene el detalle completo de un ticket por su ID.
      * Incluye información del asistente, tipo de entrada y código QR.
-     *
-     * @param id ID del ticket
-     * @return Optional con el DTO del ticket o vacío si no existe
      */
-    public Optional<TicketDTO> getTicketById(Long id) {
-        logger.info("Buscando detalle de la entrada con ID: {}", id);
-
-        Optional<TicketDTO> result = ticketRepository.findById(id)
-                .map(ticketMapper::toDTO);
-
-        if (result.isPresent()) {
-            TicketDTO ticket = result.get();
-            logger.debug("Entrada encontrada: {} {} (Tipo: {}, QR: {})",
-                    ticket.getFirstName(),
-                    ticket.getLastName(),
-                    ticket.getTicketTypeName(),
-                    ticket.getQrCode());
-        } else {
-            logger.warn("No se encontró entrada con ID: {}", id);
-        }
-
-        return result;
+    public TicketDTO getTicketById(Long id) {
+        return ticketRepository.findById(id)
+                .map(ticketMapper::toDTO)
+                .orElseThrow(() -> new AppException("msg.ticket.not-found", id));
     }
 
     /**
      * Crea un nuevo ticket manualmente asociándolo a un TicketType.
-     * <p>
-     * USO TÍPICO:
-     * - Entradas de cortesía para invitados especiales
-     * - Corrección de errores en pedidos
-     * - Casos especiales que requieren creación manual
-     * <p>
      * NOTA: En flujo normal de compra, los tickets se crean automáticamente
      * en OrderService.executeOrder() con generación de QR y asignación a pedido.
      *
@@ -133,7 +88,6 @@ public class TicketService {
                 dto.getFirstName(), dto.getLastName());
         logger.debug("Tipo de entrada solicitado ID: {}", dto.getTicketTypeId());
 
-        // Paso 1: Buscar y validar el tipo de entrada
         TicketType type = ticketTypeRepository.findById(dto.getTicketTypeId())
                 .orElseThrow(() -> {
                     logger.error("Tipo de entrada con ID {} no encontrado al crear ticket",
@@ -144,15 +98,10 @@ public class TicketService {
         logger.debug("Tipo de entrada encontrado: {} (Precio: {}, Stock: {})",
                 type.getName(), type.getPrice(), type.getStockAvailable());
 
-        // Paso 2: Mapear DTO a entidad
         Ticket ticket = ticketMapper.toEntity(dto);
-        logger.debug("Entidad Ticket mapeada desde DTO");
-
-        // Paso 3: Establecer la relación con el tipo de entrada
         ticket.setTicketType(type);
         logger.debug("Relación con tipo de entrada establecida");
 
-        // Paso 4: Persistir en base de datos
         Ticket saved = ticketRepository.save(ticket);
 
         logger.info("✓ Entrada creada exitosamente. ID: {}, Asistente: {} {}, Tipo: {}",

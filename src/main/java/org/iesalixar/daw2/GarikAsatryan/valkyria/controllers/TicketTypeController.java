@@ -2,9 +2,12 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.TicketTypeService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,38 +16,49 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ticket-types")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class TicketTypeController {
 
     private final TicketTypeService ticketTypeService;
+    private final MessageSource messageSource;
 
     @GetMapping
-    public ResponseEntity<List<TicketTypeDTO>> getAllTicketTypes() {
-        return ResponseEntity.ok(ticketTypeService.getAllTicketTypes());
+    public ResponseEntity<ResponseDTO<List<TicketTypeDTO>>> getAllTicketTypes() {
+        List<TicketTypeDTO> data = ticketTypeService.getAllTicketTypes();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticketType.list.success"), data));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TicketTypeDTO> getTicketTypeById(@PathVariable Long id) {
-        return ResponseEntity.ok(ticketTypeService.getTicketTypeById(id));
+    public ResponseEntity<ResponseDTO<TicketTypeDTO>> getTicketTypeById(@PathVariable Long id) {
+        TicketTypeDTO data = ticketTypeService.getTicketTypeById(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticketType.get.success"), data));
     }
 
     @PostMapping
-    public ResponseEntity<TicketTypeDTO> createTicketType(@Valid @RequestBody TicketTypeCreateDTO dto) {
+    public ResponseEntity<ResponseDTO<TicketTypeDTO>> createTicketType(@Valid @RequestBody TicketTypeCreateDTO dto) {
+        TicketTypeDTO created = ticketTypeService.createTicketType(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ticketTypeService.createTicketType(dto));
+                .body(ResponseDTO.success(getMessage("msg.ticketType.create.success"), created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TicketTypeDTO> updateTicketType(
+    public ResponseEntity<ResponseDTO<TicketTypeDTO>> updateTicketType(
             @PathVariable Long id,
             @Valid @RequestBody TicketTypeCreateDTO dto) {
-        return ResponseEntity.ok(ticketTypeService.updateTicketType(id, dto));
+        TicketTypeDTO updated = ticketTypeService.updateTicketType(id, dto);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticketType.update.success"), updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTicketType(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deleteTicketType(@PathVariable Long id) {
         ticketTypeService.deleteTicketType(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticketType.delete.success"), null));
+    }
+
+    /**
+     * Utilidad para obtener mensajes traducidos según el locale de la petición.
+     */
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }

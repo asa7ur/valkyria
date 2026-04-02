@@ -2,42 +2,42 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketCreateDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.TicketService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/tickets")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class TicketController {
 
     private final TicketService ticketService;
+    private final MessageSource messageSource;
 
     /**
      * Obtiene una página de tickets.
      * Permite filtrar por término de búsqueda (nombre, documento, tipo, estado).
      */
     @GetMapping
-    public ResponseEntity<Page<TicketDTO>> getAllTickets(
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
-        return ResponseEntity.ok(ticketService.getAllTickets(search, pageable));
+    public ResponseEntity<ResponseDTO<List<TicketDTO>>> getAllTickets(
+            @ModelAttribute FilterDTO filterDTO) {
+        List<TicketDTO> data = ticketService.getAllTickets(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticket.list.success"), data, filterDTO));
     }
 
     /**
      * Obtiene la información detallada de un ticket específico.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<TicketDTO> getTicketById(@PathVariable Long id) {
-        return ticketService.getTicketById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ResponseDTO<TicketDTO>> getTicketById(@PathVariable Long id) {
+        TicketDTO data = ticketService.getTicketById(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticket.get.success"), data));
     }
 
     /**
@@ -45,27 +45,36 @@ public class TicketController {
      * La validación @IsAdult se dispara aquí automáticamente.
      */
     @PostMapping
-    public ResponseEntity<TicketDTO> createTicket(@Valid @RequestBody TicketCreateDTO ticketCreateDTO) {
-        TicketDTO created = ticketService.createTicket(ticketCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<ResponseDTO<TicketDTO>> createTicket(@Valid @RequestBody TicketCreateDTO dto) {
+        TicketDTO created = ticketService.createTicket(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseDTO.success(getMessage("msg.ticket.create.success"), created));
     }
 
     /**
      * Actualiza los datos de un ticket existente.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<TicketDTO> updateTicket(
+    public ResponseEntity<ResponseDTO<TicketDTO>> updateTicket(
             @PathVariable Long id,
-            @Valid @RequestBody TicketCreateDTO ticketCreateDTO) {
-        return ResponseEntity.ok(ticketService.updateTicket(id, ticketCreateDTO));
+            @Valid @RequestBody TicketCreateDTO dto) {
+        TicketDTO updated = ticketService.updateTicket(id, dto);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticket.update.success"), updated));
     }
 
     /**
      * Elimina un ticket del sistema.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTicket(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deleteTicket(@PathVariable Long id) {
         ticketService.deleteTicket(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticket.delete.success"), null));
+    }
+
+    /**
+     * Utilidad para obtener mensajes traducidos según el locale de la petición.
+     */
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }

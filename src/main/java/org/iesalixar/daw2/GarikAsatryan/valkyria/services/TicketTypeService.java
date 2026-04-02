@@ -7,6 +7,8 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.TicketType;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.TicketTypeMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.TicketTypeRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,17 +17,34 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class TicketTypeService {
+    private static final Logger logger = LoggerFactory.getLogger(CampingTypeService.class);
+
     private final TicketTypeRepository ticketTypeRepository;
     private final TicketTypeMapper ticketTypeMapper;
 
     public List<TicketTypeDTO> getAllTicketTypes() {
-        return ticketTypeMapper.toDTOList(ticketTypeRepository.findAll());
+        logger.info("Recuperando lista completa de tipos de entrada");
+
+        List<TicketTypeDTO> ticketTypes = ticketTypeMapper.toDTOList(
+                ticketTypeRepository.findAll()
+        );
+
+        logger.debug("Total de tipos de entrada recuperados: {}", ticketTypes.size());
+        return ticketTypes;
     }
 
     public TicketTypeDTO getTicketTypeById(Long id) {
-        return ticketTypeRepository.findById(id)
+        logger.info("Buscando tipo de entrada con ID: {}", id);
+
+        TicketTypeDTO result = ticketTypeRepository.findById(id)
                 .map(ticketTypeMapper::toDTO)
-                .orElseThrow(() -> new AppException("msg.ticket.not-found", id));
+                .orElseThrow(() -> {
+                    logger.error("Tipo de entrada con ID {} no encontrado", id);
+                    return new AppException("msg.ticket.not-found", id);
+                });
+
+        logger.debug("Tipo de entrada encontrado: {}", result.getName());
+        return result;
     }
 
     @Transactional

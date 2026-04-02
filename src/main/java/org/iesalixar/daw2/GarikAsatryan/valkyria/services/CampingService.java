@@ -71,13 +71,27 @@ public class CampingService {
 
     @Transactional
     public CampingDTO createCamping(CampingCreateDTO dto) {
+        logger.info("Iniciando creación manual de entrada de camping para: {} {}",
+                dto.getFirstName(), dto.getLastName());
+        logger.debug("Tipo de camping solicitado ID: {}", dto.getCampingTypeId());
         CampingType type = campingTypeRepository.findById(dto.getCampingTypeId())
                 .orElseThrow(() -> new AppException("msg.camping.type-not-found", dto.getCampingTypeId()));
 
+        logger.debug("Tipo de camping encontrado: {} (Precio: {}, Stock: {})",
+                type.getName(), type.getPrice(), type.getStockAvailable());
+
         Camping camping = campingMapper.toEntity(dto);
+
         camping.setCampingType(type);
 
         Camping savedCamping = campingRepository.save(camping);
+
+        logger.info("✓ Entrada Camping creada exitosamente. ID: {}, Asistente: {} {}, Tipo: {}",
+                savedCamping.getId(),
+                savedCamping.getFirstName(),
+                savedCamping.getLastName(),
+                type.getName());
+
         return campingMapper.toDTO(savedCamping);
     }
 
