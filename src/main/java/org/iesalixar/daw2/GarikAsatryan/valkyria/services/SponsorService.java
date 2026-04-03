@@ -2,6 +2,8 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.SponsorCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.SponsorDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.SponsorDetailDTO;
@@ -20,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Servicio de negocio para la gestión de patrocinadores (sponsors).
@@ -30,46 +33,49 @@ import java.util.Optional;
 public class SponsorService {
     private static final Logger logger = LoggerFactory.getLogger(SponsorService.class);
 
-    // Constante que define el directorio donde se almacenan las imágenes de patrocinadores
-    private static final String SPONSORS_FOLDER = "sponsors";
-
     // Inyección de dependencias mediante constructor (Lombok @RequiredArgsConstructor)
     private final SponsorRepository sponsorRepository;
     private final StageRepository stageRepository;
     private final SponsorMapper sponsorMapper;
     private final FileService fileService;
+    private final PaginationComponent paginationComponent;
+
+    // Constante que define el directorio donde se almacenan las imágenes de patrocinadores
+    private static final String SPONSORS_FOLDER = "sponsors";
 
     /**
-     * Obtiene una página de patrocinadores con soporte de paginación y búsqueda opcional.
-     *
-     * @param searchTerm Término de búsqueda opcional para filtrar por nombre o descripción
-     * @param pageable   Configuración de paginación (página, tamaño, ordenación)
-     * @return Página de DTOs de patrocinadores
+     * Obtiene una lista paginada de patrocinadores basada en filtros.
+     * Actualiza el FilterDTO con los metadatos de paginación.
      */
-    public Page<SponsorDTO> getAllSponsors(String searchTerm, Pageable pageable) {
+    public List<SponsorDTO> getAllSponsors(FilterDTO filterDTO) {
         logger.info("Iniciando búsqueda de patrocinadores. Término: '{}', Página: {}, Tamaño: {}",
-                searchTerm != null ? searchTerm : "SIN FILTRO",
-                pageable.getPageNumber(),
-                pageable.getPageSize());
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
 
-        // Decisión: búsqueda por término o listado completo
-        Page<Sponsor> sponsorPage = (searchTerm != null && !searchTerm.trim().isEmpty())
-                ? sponsorRepository.searchSponsors(searchTerm, pageable)
+        // Creamos el objeto Pageable usando el componente de paginación
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
+
+        // Ejecutamos la búsqueda (con o sin filtro de texto)
+        Page<Sponsor> sponsorPage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
+                ? sponsorRepository.searchSponsors(filterDTO.getSearch(), pageable)
                 : sponsorRepository.findAll(pageable);
+
+        // Actualizamos los metadatos del filtro (total de páginas, elementos, etc.)
+        paginationComponent.updateFilterMetadata(filterDTO, sponsorPage);
 
         logger.debug("Patrocinadores encontrados: {} de {} totales",
                 sponsorPage.getNumberOfElements(),
                 sponsorPage.getTotalElements());
 
         // Convertir entidades a DTOs usando el mapper
-        return sponsorPage.map(sponsorMapper::toDTO);
+        return sponsorPage.getContent().stream()
+                .map(sponsorMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Obtiene la lista completa de patrocinadores sin paginación.
-     * Útil para selectores o dropdowns en la interfaz.
-     *
-     * @return Lista de todos los patrocinadores como DTOs
+     * Obtiene la lista completa de patrocinadores para selectores.
      */
     public List<SponsorDTO> getAllSponsors() {
         logger.info("Recuperando lista completa de patrocinadores");
@@ -83,41 +89,22 @@ public class SponsorService {
     }
 
     /**
-     * Obtiene el detalle completo de un patrocinador por su ID.
-     * Incluye información adicional como los escenarios asociados.
-     *
-     * @param id ID del patrocinador
-     * @return Optional con el DTO detallado del patrocinador o vacío si no existe
+     * Obtiene el detalle de un patrocinador o lanza excepción si no existe.
      */
-    public Optional<SponsorDetailDTO> getSponsorById(Long id) {
+    public SponsorDetailDTO getSponsorById(Long id) {
         logger.info("Buscando detalle del patrocinador con ID: {}", id);
 
-        Optional<SponsorDetailDTO> result = sponsorRepository.findById(id)
-                .map(sponsorMapper::toDetailDTO);
-
-        if (result.isPresent()) {
-            logger.debug("Patrocinador encontrado: {}", result.get().getName());
-        } else {
-            logger.warn("No se encontró patrocinador con ID: {}", id);
-        }
-
-        return result;
+        return sponsorRepository.findById(id)
+                .map(sponsorMapper::toDetailDTO)
+                .orElseThrow(() -> new AppException("msg.sponsor.not-found", id));
     }
 
-    /**
-     * Crea un nuevo patrocinador en el sistema.
-     * Asocia automáticamente los escenarios (stages) especificados en el DTO.
-     *
-     * @param dto DTO con los datos del patrocinador a crear
-     * @return DTO del patrocinador creado
-     */
     @Transactional
     public SponsorDTO createSponsor(SponsorCreateDTO dto) {
         logger.info("Iniciando creación de nuevo patrocinador: {}", dto.getName());
 
         // Conversión de DTO a entidad
         Sponsor sponsor = sponsorMapper.toEntity(dto);
-        logger.debug("Entidad Sponsor mapeada desde DTO");
 
         // Actualizar relaciones con escenarios (stages) si se proporcionaron
         updateSponsorStages(sponsor, dto.getStageIds());
@@ -130,15 +117,6 @@ public class SponsorService {
         return sponsorMapper.toDTO(savedSponsor);
     }
 
-    /**
-     * Actualiza los datos de un patrocinador existente.
-     * Actualiza también las asociaciones con escenarios (stages).
-     *
-     * @param id  ID del patrocinador a actualizar
-     * @param dto DTO con los nuevos datos
-     * @return DTO del patrocinador actualizado
-     * @throws AppException si el patrocinador no existe
-     */
     @Transactional
     public SponsorDTO updateSponsor(Long id, SponsorCreateDTO dto) {
         logger.info("Iniciando actualización del patrocinador con ID: {}", id);
@@ -168,45 +146,6 @@ public class SponsorService {
         return sponsorMapper.toDTO(updatedSponsor);
     }
 
-    /**
-     * Método privado helper para actualizar las relaciones Many-to-Many con escenarios.
-     * Busca los escenarios por sus IDs y los asocia al patrocinador.
-     *
-     * @param sponsor  Entidad del patrocinador a actualizar
-     * @param stageIds Lista de IDs de escenarios a asociar (puede ser null)
-     */
-    private void updateSponsorStages(Sponsor sponsor, List<Long> stageIds) {
-        if (stageIds != null) {
-            logger.debug("Actualizando relación con {} escenarios", stageIds.size());
-
-            // Buscar todos los escenarios por sus IDs
-            List<Stage> stages = stageRepository.findAllById(stageIds);
-
-            // Verificar si se encontraron todos los escenarios solicitados
-            if (stages.size() != stageIds.size()) {
-                logger.warn("Se solicitaron {} escenarios pero solo se encontraron {}. " +
-                        "Algunos IDs pueden no existir", stageIds.size(), stages.size());
-            }
-
-            // Establecer la nueva lista de escenarios
-            sponsor.setStages(stages);
-            logger.debug("Relación con escenarios actualizada. Total escenarios asociados: {}",
-                    stages.size());
-        } else {
-            logger.debug("No se proporcionaron IDs de escenarios, se mantiene la relación actual");
-        }
-    }
-
-    /**
-     * Procesa y guarda la imagen de un patrocinador.
-     * Gestión completa: elimina la imagen anterior si existe, guarda la nueva y actualiza la BD.
-     * Método transaccional para garantizar consistencia entre archivo y base de datos.
-     *
-     * @param id   ID del patrocinador
-     * @param file Archivo de la nueva imagen
-     * @return Nombre del archivo guardado
-     * @throws AppException si el patrocinador no existe
-     */
     @Transactional
     public String processAndSaveImage(Long id, MultipartFile file) {
         logger.info("Procesando nueva imagen para patrocinador con ID: {}", id);
@@ -241,14 +180,7 @@ public class SponsorService {
         return fileName;
     }
 
-    /**
-     * Elimina la imagen de un patrocinador tanto del sistema de archivos como de la base de datos.
-     * No elimina al patrocinador, solo su imagen.
-     *
-     * @param id ID del patrocinador
-     * @throws AppException si el patrocinador no existe
-     */
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void deleteLogo(Long id) {
         logger.info("Iniciando eliminación de imagen del patrocinador con ID: {}", id);
 
@@ -279,14 +211,6 @@ public class SponsorService {
         }
     }
 
-    /**
-     * Elimina un patrocinador del sistema.
-     * Elimina primero la imagen asociada si existe antes de eliminar el registro.
-     * IMPORTANTE: Las relaciones Many-to-Many con escenarios se eliminarán automáticamente.
-     *
-     * @param id ID del patrocinador a eliminar
-     * @throws AppException si el patrocinador no existe
-     */
     @Transactional
     public void deleteSponsor(Long id) {
         logger.info("Iniciando eliminación del patrocinador con ID: {}", id);
@@ -314,5 +238,20 @@ public class SponsorService {
         sponsorRepository.delete(sponsor);
         logger.info("Patrocinador con ID {} eliminado correctamente del sistema. " +
                 "Relaciones con escenarios también eliminadas", id);
+    }
+
+    private void updateSponsorStages(Sponsor sponsor, List<Long> stageIds) {
+        if (stageIds != null) {
+            logger.debug("Actualizando relación con {} escenarios", stageIds.size());
+
+            // Buscar todos los escenarios por sus IDs
+            List<Stage> stages = stageRepository.findAllById(stageIds);
+
+            // Establecer la nueva lista de escenarios
+            sponsor.setStages(stages);
+            logger.debug("Relación con escenarios actualizada.");
+        } else {
+            logger.debug("No se proporcionaron IDs de escenarios, se mantiene la relación actual");
+        }
     }
 }
