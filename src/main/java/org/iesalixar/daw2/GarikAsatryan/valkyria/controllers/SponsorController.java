@@ -29,8 +29,8 @@ public class SponsorController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<SponsorDTO>>> getAllSponsors(@ModelAttribute FilterDTO filterDTO) {
-        List<SponsorDTO> data = sponsorService.getAllSponsors(filterDTO);
+    public ResponseEntity<ResponseDTO<List<SponsorDetailDTO>>> getAllSponsors(@ModelAttribute FilterDTO filterDTO) {
+        List<SponsorDetailDTO> data = sponsorService.getAllSponsors(filterDTO);
         return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.sponsor.list.success"), data, filterDTO));
     }
 
@@ -61,11 +61,11 @@ public class SponsorController {
         return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.sponsor.delete.success"), null));
     }
 
-    @PostMapping("/{id}/image")
-    public ResponseEntity<ResponseDTO<Map<String, String>>> uploadImage(
+    @PostMapping("/{id}/logo")
+    public ResponseEntity<ResponseDTO<Map<String, String>>> uploadLogo(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
-        String fileName = sponsorService.processAndSaveImage(id, file);
+        String fileName = sponsorService.processAndSaveLogo(id, file);
         return ResponseEntity.ok(ResponseDTO.success(
                 getMessage("msg.sponsor.image.upload.success"),
                 Map.of("fileName", fileName)

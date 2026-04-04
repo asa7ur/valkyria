@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -47,7 +46,7 @@ public class SponsorService {
      * Obtiene una lista paginada de patrocinadores basada en filtros.
      * Actualiza el FilterDTO con los metadatos de paginación.
      */
-    public List<SponsorDTO> getAllSponsors(FilterDTO filterDTO) {
+    public List<SponsorDetailDTO> getAllSponsors(FilterDTO filterDTO) {
         logger.info("Iniciando búsqueda de patrocinadores. Término: '{}', Página: {}, Tamaño: {}",
                 filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
                 filterDTO.getPage(),
@@ -70,7 +69,7 @@ public class SponsorService {
 
         // Convertir entidades a DTOs usando el mapper
         return sponsorPage.getContent().stream()
-                .map(sponsorMapper::toDTO)
+                .map(sponsorMapper::toDetailDTO)
                 .collect(Collectors.toList());
     }
 
@@ -147,7 +146,7 @@ public class SponsorService {
     }
 
     @Transactional
-    public String processAndSaveImage(Long id, MultipartFile file) {
+    public String processAndSaveLogo(Long id, MultipartFile file) {
         logger.info("Procesando nueva imagen para patrocinador con ID: {}", id);
 
         // Buscar el patrocinador
