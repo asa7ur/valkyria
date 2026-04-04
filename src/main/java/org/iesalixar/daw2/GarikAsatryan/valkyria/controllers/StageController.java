@@ -2,53 +2,65 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.StageCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.StageDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.StageService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/stages")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class StageController {
 
     private final StageService stageService;
+    private final MessageSource messageSource;
 
     @GetMapping
-    public ResponseEntity<Page<StageDTO>> getAllStages(
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
-        return ResponseEntity.ok(stageService.getAllStages(search, pageable));
+    public ResponseEntity<ResponseDTO<List<StageDTO>>> getAllStages(
+            @ModelAttribute FilterDTO filterDTO) {
+        List<StageDTO> data = stageService.getAllStages(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.stage.list.success"), data));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StageDTO> getStageById(@PathVariable Long id) {
-        return stageService.getStageById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ResponseDTO<StageDTO>> getStageById(@PathVariable Long id) {
+        StageDTO data = stageService.getStageById(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.stage.get.success"), data));
     }
 
     @PostMapping
-    public ResponseEntity<StageDTO> createStage(@Valid @RequestBody StageCreateDTO stageCreateDTO) {
+    public ResponseEntity<ResponseDTO<StageDTO>> createStage(@Valid @RequestBody StageCreateDTO stageCreateDTO) {
         StageDTO created = stageService.createStage(stageCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseDTO.success(getMessage("msg.stage.create.success"), created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<StageDTO> updateStage(
+    public ResponseEntity<ResponseDTO<StageDTO>> updateStage(
             @PathVariable Long id,
-            @Valid @RequestBody StageCreateDTO stageCreateDTO) {
-        return ResponseEntity.ok(stageService.updateStage(id, stageCreateDTO));
+            @Valid @RequestBody StageCreateDTO dto) {
+        StageDTO updated = stageService.updateStage(id, dto);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.stage.update.success"), updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStage(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deleteStage(@PathVariable Long id) {
         stageService.deleteStage(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.stage.delete.success"), null));
+    }
+
+    /**
+     * Utilidad para obtener mensajes traducidos según el locale de la petición.
+     */
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }

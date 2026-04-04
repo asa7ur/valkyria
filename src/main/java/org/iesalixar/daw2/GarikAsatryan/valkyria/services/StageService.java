@@ -2,6 +2,8 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.StageCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.StageDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Stage;
@@ -14,26 +16,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Servicio de negocio para la gestión de escenarios (stages) del festival.
  * Los escenarios son los espacios físicos donde tienen lugar las actuaciones.
- * <p>
- * Responsabilidades:
- * - Gestión CRUD de escenarios (creación, consulta, actualización, eliminación)
- * - Consultas del mapa de escenarios del festival
- * - Validación de existencia de escenarios para programación de actuaciones
- * <p>
- * Relaciones importantes:
- * - Un escenario puede tener múltiples actuaciones (performances)
- * - Un escenario puede tener múltiples patrocinadores (sponsors) asociados
- * - Los escenarios son referenciados en el programa del festival
- * <p>
- * IMPORTANTE: No se puede eliminar un escenario si tiene:
- * - Actuaciones programadas (constraint FK en Performance)
- * - Patrocinadores asociados (relación Many-to-Many)
- * En estos casos, la BD rechazará la operación con DataIntegrityViolationException
  */
 @Service
 @RequiredArgsConstructor
@@ -43,79 +31,59 @@ public class StageService {
     // Inyección de dependencias mediante constructor (Lombok @RequiredArgsConstructor)
     private final StageRepository stageRepository;
     private final StageMapper stageMapper;
+    private final PaginationComponent paginationComponent;
 
     /**
      * Obtiene escenarios paginados con búsqueda opcional.
      * Permite filtrar por nombre o ubicación del escenario.
-     *
-     * @param searchTerm Término de búsqueda opcional (nombre, ubicación)
-     * @param pageable   Configuración de paginación (página, tamaño, ordenación)
-     * @return Página de DTOs de escenarios
      */
-    public Page<StageDTO> getAllStages(String searchTerm, Pageable pageable) {
+    public List<StageDTO> getAllStages(FilterDTO filterDTO) {
         logger.info("Iniciando búsqueda de escenarios. Término: '{}', Página: {}, Tamaño: {}",
-                searchTerm != null ? searchTerm : "SIN FILTRO",
-                pageable.getPageNumber(),
-                pageable.getPageSize());
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
+
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
 
         // Decisión: búsqueda filtrada o listado completo
-        Page<Stage> stagePage;
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            logger.debug("Aplicando búsqueda con término: '{}'", searchTerm);
-            stagePage = stageRepository.searchStages(searchTerm, pageable);
-        } else {
-            logger.debug("Recuperando todos los escenarios sin filtro");
-            stagePage = stageRepository.findAll(pageable);
-        }
+        Page<Stage> stagePage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
+                ? stageRepository.searchStages(filterDTO.getSearch(), pageable)
+                : stageRepository.findAll(pageable);
+
+        paginationComponent.updateFilterMetadata(filterDTO, stagePage);
 
         logger.debug("Escenarios encontrados: {} de {} totales",
                 stagePage.getNumberOfElements(),
                 stagePage.getTotalElements());
 
         // Convertir entidades a DTOs usando el mapper
-        return stagePage.map(stageMapper::toDTO);
+        return stagePage.getContent().stream()
+                .map(stageMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     /**
      * Obtiene un escenario específico por su ID.
      * Incluye toda la información del escenario (nombre, capacidad, ubicación, etc.).
-     *
-     * @param id ID del escenario
-     * @return Optional con el DTO del escenario o vacío si no existe
      */
-    public Optional<StageDTO> getStageById(Long id) {
+    public StageDTO getStageById(Long id) {
         logger.info("Buscando detalle del escenario con ID: {}", id);
 
-        Optional<StageDTO> result = stageRepository.findById(id)
-                .map(stageMapper::toDTO);
-
-        if (result.isPresent()) {
-            logger.debug("Escenario encontrado: {}",
-                    result.get().getName());
-        } else {
-            logger.warn("No se encontró escenario con ID: {}", id);
-        }
-
-        return result;
+        return stageRepository.findById(id)
+                .map(stageMapper::toDTO)
+                .orElseThrow(() -> new AppException("msg.stage.not-found", id));
     }
 
     /**
      * Crea un nuevo escenario en el sistema.
      * El escenario estará disponible para programar actuaciones inmediatamente.
-     *
-     * @param stageCreateDTO DTO con los datos del escenario a crear
-     * @return DTO del escenario creado
      */
     @Transactional
-    public StageDTO createStage(StageCreateDTO stageCreateDTO) {
-        logger.info("Iniciando creación de escenario: {}", stageCreateDTO.getName());
-        logger.debug("Datos del escenario: Nombre={}, Capacidad={}",
-                stageCreateDTO.getName(),
-                stageCreateDTO.getCapacity());
+    public StageDTO createStage(StageCreateDTO dto) {
+        logger.info("Iniciando creación de escenario: {}", dto.getName());
 
         // Conversión de DTO a entidad
-        Stage stage = stageMapper.toEntity(stageCreateDTO);
-        logger.debug("Entidad Stage mapeada desde DTO");
+        Stage stage = stageMapper.toEntity(dto);
 
         // Persistencia en base de datos
         Stage saved = stageRepository.save(stage);
@@ -132,14 +100,9 @@ public class StageService {
      * Actualiza los datos de un escenario existente.
      * IMPORTANTE: Si hay actuaciones programadas en este escenario, se actualizarán
      * automáticamente para reflejar el nuevo nombre/información del escenario.
-     *
-     * @param id             ID del escenario a actualizar
-     * @param stageCreateDTO DTO con los nuevos datos
-     * @return DTO del escenario actualizado
-     * @throws AppException si el escenario no existe
      */
     @Transactional
-    public StageDTO updateStage(Long id, StageCreateDTO stageCreateDTO) {
+    public StageDTO updateStage(Long id, StageCreateDTO dto) {
         logger.info("Iniciando actualización del escenario con ID: {}", id);
 
         // Buscar el escenario existente
@@ -155,7 +118,7 @@ public class StageService {
                 existingStage.getCapacity());
 
         // Actualizar los campos de la entidad con los datos del DTO
-        stageMapper.updateEntityFromDTO(stageCreateDTO, existingStage);
+        stageMapper.updateEntityFromDTO(dto, existingStage);
         logger.debug("Datos del escenario actualizados en memoria");
 
         // Guardar cambios
