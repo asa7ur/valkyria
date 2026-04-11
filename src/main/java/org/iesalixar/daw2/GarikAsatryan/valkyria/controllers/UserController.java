@@ -2,16 +2,16 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PasswordChangeDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.UserService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -19,17 +19,20 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final MessageSource messageSource;
 
     /**
-     * Obtiene una lista paginada de usuarios.
-     * Solo accesible para ADMIN o MANAGER gracias a la jerarquía de roles.
+     * Lista paginada de usuarios con soporte para términos de búsqueda.
      */
     @GetMapping
     @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<Page<UserDTO>> getAllUsers(
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
-        return ResponseEntity.ok(userService.getAllUsers(search, pageable));
+    public ResponseEntity<ResponseDTO<List<UserDTO>>> getAllUsers(@ModelAttribute FilterDTO filterDTO) {
+        List<UserDTO> data = userService.getAllUsers(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(
+                getMessage("msg.user.list.success"),
+                data,
+                filterDTO
+        ));
     }
 
     /**
@@ -37,10 +40,9 @@ public class UserController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ResponseDTO<UserDTO>> getUserById(@PathVariable Long id) {
+        UserDTO data = userService.getUserById(id);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.user.get.success"), data));
     }
 
     /**
@@ -48,9 +50,10 @@ public class UserController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserRegistrationDTO dto) {
+    public ResponseEntity<ResponseDTO<UserDTO>> createUser(@Valid @RequestBody UserRegistrationDTO dto) {
         UserDTO created = userService.createUser(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ResponseDTO.success(getMessage("msg.user.create.success"), created));
     }
 
     /**
@@ -58,10 +61,11 @@ public class UserController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> updateUser(
+    public ResponseEntity<ResponseDTO<UserDTO>> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRegistrationDTO dto) {
-        return ResponseEntity.ok(userService.updateUser(id, dto));
+        UserDTO updated = userService.updateUser(id, dto);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.user.update.success"), updated));
     }
 
     /**
@@ -69,9 +73,9 @@ public class UserController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ResponseDTO<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.user.delete.success"), null));
     }
 
     /**
@@ -81,10 +85,17 @@ public class UserController {
      */
     @PatchMapping("/{id}/password")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> changePassword(
+    public ResponseEntity<ResponseDTO<Void>> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody PasswordChangeDTO dto) {
         userService.changePassword(id, dto);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.user.password.success"), null));
+    }
+
+    /**
+     * Utilidad para resolver mensajes traducidos según el locale del cliente.
+     */
+    private String getMessage(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 }
