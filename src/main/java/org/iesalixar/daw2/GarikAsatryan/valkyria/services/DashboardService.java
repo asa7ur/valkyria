@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -20,10 +21,11 @@ public class DashboardService {
     private final UserRepository userRepository;
 
     public DashboardStatsDTO getAdminDashboardStats() {
-        // Ingresos de pedidos completados
+        // Ingresos de pedidos completados (filtrando nulls de forma segura)
         BigDecimal totalRevenue = orderRepository.findAll().stream()
                 .filter(o -> o.getStatus() == OrderStatus.PAID)
                 .map(Order::getTotalPrice)
+                .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         long artistsCount = artistRepository.count();
@@ -39,7 +41,7 @@ public class DashboardService {
                 .totalTicketsSold(ticketsCount)
                 .totalActiveUsers(usersCount)
                 .ticketCapacityPercentage(Math.min(capacity, 100.0))
-                .salesTrend(new ArrayList<>()) // Lo rellenaremos en el siguiente paso de gráficas
+                .salesTrend(new ArrayList<>())
                 .build();
     }
 }
