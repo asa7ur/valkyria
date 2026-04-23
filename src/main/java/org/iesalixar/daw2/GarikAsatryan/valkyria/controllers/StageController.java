@@ -27,7 +27,7 @@ public class StageController {
     public ResponseEntity<ResponseDTO<List<StageDTO>>> getAllStages(
             @ModelAttribute FilterDTO filterDTO) {
         List<StageDTO> data = stageService.getAllStages(filterDTO);
-        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.stage.list.success"), data));
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.stage.list.success"), data, filterDTO));
     }
 
     @GetMapping("/{id}")
