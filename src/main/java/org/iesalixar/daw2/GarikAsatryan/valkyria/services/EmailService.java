@@ -79,27 +79,38 @@ public class EmailService {
      * a menos que crees otro template HTML para los pedidos.
      */
     public void sendOrderConfirmationEmail(Order order, byte[] pdfBytes) throws Exception {
-        logger.info("Iniciando envío de confirmación de pedido #{}", order.getId());
-
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        logger.info("Iniciando envío de confirmación de pedido HTML #{}", order.getId());
 
         String to = (order.getUser() != null) ? order.getUser().getEmail() : order.getGuestEmail();
         String firstName = (order.getUser() != null) ? order.getUser().getFirstName() : "Invitado";
+        String logoUrl = backendUrl + "/uploads/logo.png";
 
-        String subject = getMessage("msg.order.email.subject", new Object[]{order.getId()});
-        String bodyTemplate = getMessage("msg.order.email.body", null);
-        String body = MessageFormat.format(bodyTemplate, firstName, order.getId());
+        // 1. Preparar el contexto de Thymeleaf
+        Context context = new Context(LocaleContextHolder.getLocale());
+        context.setVariable("firstName", firstName);
+        context.setVariable("orderId", order.getId());
+        context.setVariable("logoUrl", logoUrl);
 
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(body, true);
+        // 2. Procesar el template HTML
+        String body = templateEngine.process("email-order-confirmation", context);
 
-        String fileName = "Valkyria_Ticket_Order_" + order.getId() + ".pdf";
-        helper.addAttachment(fileName, new ByteArrayResource(pdfBytes));
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        mailSender.send(message);
-        logger.info("Confirmación de pedido #{} enviada.", order.getId());
+            helper.setTo(to);
+            helper.setSubject(getMessage("msg.order.email.subject", new Object[]{order.getId()}));
+            helper.setText(body, true); // true = enviar como HTML
+
+            String fileName = "Valkyria_Ticket_Order_" + order.getId() + ".pdf";
+            helper.addAttachment(fileName, new ByteArrayResource(pdfBytes));
+
+            mailSender.send(message);
+            logger.info("Confirmación de pedido HTML #{} enviada.", order.getId());
+        } catch (Exception e) {
+            logger.error("Error al enviar correo de pedido: {}", e.getMessage());
+            throw new RuntimeException("Error al enviar email de confirmación", e);
+        }
     }
 
     private String getMessage(String key, Object[] args) {

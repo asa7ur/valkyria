@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f4f4f4;
+            padding-bottom: 40px;
+        }
+
+        .main {
+            background-color: #ffffff;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 600px;
+            border-spacing: 0;
+            color: #444444;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .header {
+            background-color: #1a1a1a;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 40px 30px;
+            line-height: 1.6;
+        }
+
+        .order-info {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #999999;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .attachment-notice {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <table class="main">
+        <tr>
+            <td class="header">
+                <img th:src="${logoUrl}" alt="Valkyria Logo" width="150"
+                     style="display: block; margin: 0 auto;">
+            </td>
+        </tr>
+        <tr>
+            <td class="content">
+                <h1 th:text="#{msg.email.order.title(${firstName})}">¡Entradas listas, Guerrero!</h1>
+                <p th:text="#{msg.email.order.p1}">Tu compra en Valkyria Festival se ha completado con éxito. Prepárate
+                    para la batalla musical.</p>
+
+                <div class="order-info">
+                    <p><strong>ID del Pedido:</strong> <span th:text="${orderId}">#0001</span></p>
+                    <p th:text="#{msg.email.order.p2}">Tus entradas están adjuntas a este correo en formato PDF.</p>
+                </div>
+
+                <p class="attachment-notice">Recuerda llevar tu código QR (digital o impreso) para acceder al
+                    recinto.</p>
+            </td>
+        </tr>
+    </table>
+    <div class="footer">
+        <p>© 2026 Valkyria Festival. Todos los derechos reservados.</p>
+        <p>Sevilla, España | <a href="#" style="color: #999;">Política de Privacidad</a></p>
+    </div>
+</div>
+</body>
+</html>
