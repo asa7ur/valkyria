@@ -7,6 +7,8 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Camping;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.CampingType;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Ticket;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.TicketType;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.CampingMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.CampingRepository;
@@ -112,9 +114,22 @@ public class CampingService {
 
     @Transactional
     public void deleteCamping(Long id) {
-        if (!campingRepository.existsById(id)) {
-            throw new AppException("msg.camping.not-found", id);
+        logger.info("Iniciando eliminación de entrada al camping con ID: {}", id);
+
+        // 1. Buscar el ticket para obtener su tipo antes de borrar
+        Camping camping = campingRepository.findById(id)
+                .orElseThrow(() -> new AppException("msg.camping.not-found", id));
+
+        // 2. Recuperar el tipo y devolver el stock
+        CampingType type = camping.getCampingType();
+        if (type != null) {
+            type.setStockAvailable(type.getStockAvailable() + 1);
+            campingTypeRepository.save(type);
+            logger.info("Stock devuelto para camping tipo '{}'. Nuevo stock: {}",
+                    type.getName(), type.getStockAvailable());
         }
-        campingRepository.deleteById(id);
+
+        campingRepository.delete(camping);
+        logger.info("✓ Entrada al camping con ID {} eliminada", id);
     }
 }

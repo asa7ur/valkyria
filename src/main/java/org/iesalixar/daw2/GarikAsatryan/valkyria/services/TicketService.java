@@ -192,20 +192,21 @@ public class TicketService {
     @Transactional
     public void deleteTicket(Long id) {
         logger.info("Iniciando eliminación de entrada con ID: {}", id);
-        logger.warn("⚠ ADVERTENCIA: Eliminación de entrada en progreso. " +
-                "Verificar que no afecte pedidos confirmados.");
 
-        // Verificar que el ticket existe antes de intentar eliminar
-        if (!ticketRepository.existsById(id)) {
-            logger.error("Intento de eliminar entrada inexistente con ID: {}", id);
-            throw new AppException("msg.ticket.not-found", id);
+        // 1. Buscar el ticket para obtener su tipo antes de borrar
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new AppException("msg.ticket.not-found", id));
+
+        // 2. Recuperar el tipo y devolver el stock
+        TicketType type = ticket.getTicketType();
+        if (type != null) {
+            type.setStockAvailable(type.getStockAvailable() + 1);
+            ticketTypeRepository.save(type);
+            logger.info("Stock devuelto para ticket tipo '{}'. Nuevo stock: {}",
+                    type.getName(), type.getStockAvailable());
         }
 
-        logger.debug("Entrada encontrada, procediendo a eliminar");
-
-        // Eliminar el ticket
-        ticketRepository.deleteById(id);
-
-        logger.info("✓ Entrada con ID {} eliminada del sistema", id);
+        ticketRepository.delete(ticket);
+        logger.info("✓ Entrada con ID {} eliminada", id);
     }
 }

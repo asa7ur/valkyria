@@ -123,11 +123,31 @@ public class OrderService {
      */
     @Transactional
     public void deleteOrder(Long id) {
-        if (!orderRepository.existsById(id)) {
-            logger.error("Pedido con ID {} no encontrado", id);
-            throw new AppException("msg.error.order-not-found", id);
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new AppException("msg.error.order-not-found", id));
+
+        logger.info("Restaurando stock para el pedido #{}", id);
+
+        // Devolver stock de todos los tickets del pedido
+        for (Ticket ticket : order.getTickets()) {
+            TicketType type = ticket.getTicketType();
+            if (type != null) {
+                type.setStockAvailable(type.getStockAvailable() + 1);
+                ticketTypeRepository.save(type);
+            }
         }
-        orderRepository.deleteById(id);
+
+        // Devolver stock de todos los campings del pedido
+        for (Camping camping : order.getCampings()) {
+            CampingType type = camping.getCampingType();
+            if (type != null) {
+                type.setStockAvailable(type.getStockAvailable() + 1);
+                campingTypeRepository.save(type);
+            }
+        }
+
+        orderRepository.delete(order);
+        logger.info("✓ Pedido #{} y su stock han sido eliminados/restaurados", id);
     }
 
     /**
