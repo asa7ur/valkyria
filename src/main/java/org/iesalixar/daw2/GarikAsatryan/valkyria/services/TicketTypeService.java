@@ -1,36 +1,55 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Ticket;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.TicketType;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.TicketTypeMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.TicketTypeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class TicketTypeService {
-    private static final Logger logger = LoggerFactory.getLogger(CampingTypeService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TicketTypeService.class);
 
     private final TicketTypeRepository ticketTypeRepository;
     private final TicketTypeMapper ticketTypeMapper;
+    private final PaginationComponent paginationComponent;
 
-    public List<TicketTypeDTO> getAllTicketTypes() {
-        logger.info("Recuperando lista completa de tipos de entrada");
+    public List<TicketTypeDTO> getAllTicketTypes(FilterDTO filterDTO) {
+        logger.info("Iniciando búsqueda de entradas. Término: '{}', Página: {}, Tamaño: {}",
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
 
-        List<TicketTypeDTO> ticketTypes = ticketTypeMapper.toDTOList(
-                ticketTypeRepository.findAll()
-        );
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
 
-        logger.debug("Total de tipos de entrada recuperados: {}", ticketTypes.size());
-        return ticketTypes;
+        Page<TicketType> ticketTypePage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
+                ? ticketTypeRepository.searchTicketTypes(filterDTO.getSearch(), pageable)
+                : ticketTypeRepository.findAll(pageable);
+
+        paginationComponent.updateFilterMetadata(filterDTO, ticketTypePage);
+
+        logger.debug("Entradas encontradas: {} de {} totales",
+                ticketTypePage.getNumberOfElements(),
+                ticketTypePage.getTotalElements());
+
+        return ticketTypePage.getContent().stream()
+                .map(ticketTypeMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     public TicketTypeDTO getTicketTypeById(Long id) {

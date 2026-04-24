@@ -2,10 +2,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingTypeCreateDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingTypeDTO;
-import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.*;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.services.CampingTypeService;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -24,9 +21,9 @@ public class CampingTypeController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<CampingTypeDTO>>> getAllCampingTypes() {
-        List<CampingTypeDTO> data = campingTypeService.getAllCampingTypes();
-        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.campingType.list.success"), data));
+    public ResponseEntity<ResponseDTO<List<CampingTypeDTO>>> getAllCampingTypes(@ModelAttribute FilterDTO filterDTO) {
+        List<CampingTypeDTO> data = campingTypeService.getAllCampingTypes(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.campingType.list.success"), data, filterDTO));
 
     }
 

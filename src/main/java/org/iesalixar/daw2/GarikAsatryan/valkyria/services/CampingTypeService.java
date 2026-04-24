@@ -1,18 +1,25 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingTypeCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.CampingTypeDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.CampingType;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.TicketType;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.exceptions.AppException;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.mappers.CampingTypeMapper;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.CampingTypeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Servicio de negocio para la gestión de tipos de camping.
@@ -27,24 +34,29 @@ public class CampingTypeService {
     // Inyección de dependencias mediante constructor (Lombok @RequiredArgsConstructor)
     private final CampingTypeRepository campingTypeRepository;
     private final CampingTypeMapper campingTypeMapper;
+    private final PaginationComponent paginationComponent;
 
-    /**
-     * Obtiene la lista completa de todos los tipos de camping disponibles.
-     * Este método no tiene paginación ya que típicamente hay pocos tipos de camping.
-     * Útil para poblar selectores en formularios de creación/edición de campings.
-     *
-     * @return Lista de DTOs con todos los tipos de camping
-     */
-    public List<CampingTypeDTO> getAllCampingTypes() {
-        logger.info("Recuperando lista completa de tipos de camping");
+    public List<CampingTypeDTO> getAllCampingTypes(FilterDTO filterDTO) {
+        logger.info("Iniciando búsqueda de entradas. Término: '{}', Página: {}, Tamaño: {}",
+                filterDTO.getSearch() != null ? filterDTO.getSearch() : "SIN FILTRO",
+                filterDTO.getPage(),
+                filterDTO.getItemsPerPage());
 
-        // Obtener todas las entidades y convertirlas a DTOs
-        List<CampingTypeDTO> campingTypes = campingTypeMapper.toDTOList(
-                campingTypeRepository.findAll()
-        );
+        Pageable pageable = paginationComponent.createPageable(filterDTO, "id");
 
-        logger.debug("Total de tipos de camping recuperados: {}", campingTypes.size());
-        return campingTypes;
+        Page<CampingType> campingTypePage = (filterDTO.getSearch() != null && !filterDTO.getSearch().isBlank())
+                ? campingTypeRepository.searchCampingTypes(filterDTO.getSearch(), pageable)
+                : campingTypeRepository.findAll(pageable);
+
+        paginationComponent.updateFilterMetadata(filterDTO, campingTypePage);
+
+        logger.debug("Entradas encontradas: {} de {} totales",
+                campingTypePage.getNumberOfElements(),
+                campingTypePage.getTotalElements());
+
+        return campingTypePage.getContent().stream()
+                .map(campingTypeMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     /**

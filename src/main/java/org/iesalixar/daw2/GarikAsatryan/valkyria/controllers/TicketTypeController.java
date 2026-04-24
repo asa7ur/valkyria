@@ -2,6 +2,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.ResponseDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeCreateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.TicketTypeDTO;
@@ -23,9 +24,9 @@ public class TicketTypeController {
     private final MessageSource messageSource;
 
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<TicketTypeDTO>>> getAllTicketTypes() {
-        List<TicketTypeDTO> data = ticketTypeService.getAllTicketTypes();
-        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticketType.list.success"), data));
+    public ResponseEntity<ResponseDTO<List<TicketTypeDTO>>> getAllTicketTypes(@ModelAttribute FilterDTO filterDTO) {
+        List<TicketTypeDTO> data = ticketTypeService.getAllTicketTypes(filterDTO);
+        return ResponseEntity.ok(ResponseDTO.success(getMessage("msg.ticketType.list.success"), data, filterDTO));
     }
 
     @GetMapping("/{id}")
