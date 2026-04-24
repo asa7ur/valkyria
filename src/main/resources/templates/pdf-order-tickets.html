@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        /* Estilos específicos para PDF (Flying Saucer usa CSS 2.1) */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #333;
+        }
+        .header {
+            background-color: #1a1a1a;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .order-summary {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-bottom: 2px solid #e74c3c;
+            font-size: 14px;
+        }
+        .ticket-container {
+            padding: 20px;
+        }
+        /* Tarjeta de Ticket */
+        .ticket-card {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            width: 100%;
+            overflow: hidden;
+            page-break-inside: avoid; /* Evita que un ticket se parta entre dos páginas */
+        }
+        .ticket-left {
+            width: 70%;
+            float: left;
+            padding: 20px;
+        }
+        .ticket-right {
+            width: 25%;
+            float: right;
+            padding: 20px;
+            text-align: center;
+            background-color: #fafafa;
+            border-left: 1px solid #eee;
+        }
+        .clear { clear: both; }
+        .ticket-type {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .event-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .attendee-name {
+            font-size: 18px;
+            margin-top: 15px;
+        }
+        .qr-code {
+            width: 120px;
+            height: 120px;
+        }
+        .footer-note {
+            font-size: 10px;
+            color: #888;
+            margin-top: 10px;
+        }
+        .camping-badge {
+            background-color: #27ae60;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 style="margin:0;">VALKYRIA FESTIVAL</h1>
+    <p style="margin:5px 0 0 0; font-size: 14px;">TUS CREDENCIALES DE ACCESO</p>
+</div>
+
+<div class="order-summary">
+    <strong>Pedido:</strong> #<span th:text="${order.id}">001</span> |
+    <strong>Comprador:</strong> <span th:text="${customerName}">Nombre del Cliente</span> |
+    <strong>Fecha:</strong> <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">20/04/2026</span>
+</div>
+
+<div class="ticket-container">
+
+    <div th:each="ticket : ${order.tickets}" class="ticket-card">
+        <div class="ticket-left">
+            <div class="ticket-type">ENTRADA OFICIAL</div>
+            <div class="event-name" th:text="${ticket.ticketType.name}">ABONO GENERAL</div>
+            <div class="attendee-name">
+                <small>Asistente:</small><br/>
+                <strong th:text="${ticket.firstName + ' ' + ticket.lastName}">Nombre Apellido</strong>
+            </div>
+            <p class="footer-note">Presenta este código en la entrada principal. No compartas esta credencial.</p>
+        </div>
+        <div class="ticket-right">
+            <img th:src="${'data:image/png;base64,' + qrMap.get('T' + ticket.id)}" class="qr-code" />
+            <div style="font-size: 10px; margin-top: 5px;" th:text="${ticket.qrCode}">ID-QR</div>
+        </div>
+        <div class="clear"></div>
+    </div>
+
+    <div th:each="camping : ${order.campings}" class="ticket-card">
+        <div class="ticket-left">
+            <div class="ticket-type"><span class="camping-badge">ZONA CAMPING</span></div>
+            <div class="event-name" th:text="${camping.campingType.name}">ZONA CONFORT</div>
+            <div class="attendee-name">
+                <small>Titular Reserva:</small><br/>
+                <strong th:text="${camping.firstName + ' ' + camping.lastName}">Nombre Apellido</strong>
+            </div>
+            <p class="footer-note">Válido para acceso a la zona de descanso asignada.</p>
+        </div>
+        <div class="ticket-right">
+            <img th:src="${'data:image/png;base64,' + qrMap.get('C' + camping.id)}" class="qr-code" />
+            <div style="font-size: 10px; margin-top: 5px;" th:text="${camping.qrCode}">ID-QR</div>
+        </div>
+        <div class="clear"></div>
+    </div>
+
+</div>
+
+</body>
+</html>
