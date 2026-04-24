@@ -12,8 +12,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine; // IMPRESCINDIBLE
-import org.thymeleaf.context.Context; // IMPRESCINDIBLE
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.text.MessageFormat;
 
@@ -25,11 +25,13 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final MessageSource messageSource;
-    // CAMBIO: Inyectamos el motor de plantillas de Thymeleaf
     private final TemplateEngine templateEngine;
 
     @Value("${app.url}")
-    private String appUrl;
+    private String frontendUrl;
+
+    @Value("${app.backend.url}")
+    private String backendUrl;
 
     /**
      * Envía un correo de activación utilizando el template HTML de Thymeleaf.
@@ -37,16 +39,20 @@ public class EmailService {
     public void sendRegistrationConfirmationEmail(String to, String firstName, String token) {
         logger.info("Iniciando envío de correo de activación (HTML) a: {}", to);
 
-        // 1. Construir la URL
-        String confirmationUrl = appUrl + "/confirm-registration?token=" + token;
+        // El enlace de activación debe llevar al usuario a Angular
+        String confirmationUrl = frontendUrl + "/confirm-registration?token=" + token;
 
-        // 2. CAMBIO: Preparar el contexto de Thymeleaf (las variables que usa el HTML)
+        // El logo debe cargarse desde el servidor de Spring Boot
+        String logoUrl = backendUrl + "/uploads/logo.png";
+
+        // 2. Preparar el contexto de Thymeleaf (las variables que usa el HTML)
         // context.setVariable("nombre_en_html", valor_en_java)
         Context context = new Context(LocaleContextHolder.getLocale());
         context.setVariable("firstName", firstName);
         context.setVariable("activationUrl", confirmationUrl);
+        context.setVariable("logoUrl", logoUrl);
 
-        // 3. CAMBIO: Procesar el archivo HTML
+        // 3. CProcesar el archivo HTML
         // "email-activation" debe ser el nombre del archivo .html en src/main/resources/templates/
         String body = templateEngine.process("email-activation", context);
         logger.debug("Plantilla HTML procesada correctamente");
