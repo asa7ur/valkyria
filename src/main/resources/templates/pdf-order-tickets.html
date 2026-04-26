@@ -3,137 +3,256 @@
 <head>
     <meta charset="UTF-8" />
     <style>
-        /* Estilos específicos para PDF (Flying Saucer usa CSS 2.1) */
+        /* Configuración de Página */
         @page {
             size: A4;
-            margin: 0;
+            margin: 0; /* Quitamos márgenes globales para usar fondos completos */
         }
+
         body {
             font-family: 'Helvetica', Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #ffffff;
             color: #333;
+            line-height: 1.4;
         }
-        .header {
+
+        /* Barra Lateral Decorativa (Vibe de Festival) */
+        .sidebar-accent {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8mm;
             background-color: #1a1a1a;
-            color: white;
-            padding: 30px;
-            text-align: center;
+            border-right: 3px solid #d4af37; /* Dorado */
         }
-        .order-summary {
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-bottom: 2px solid #e74c3c;
+
+        .main-content {
+            margin-left: 15mm;
+            margin-right: 15mm;
+            padding-top: 20mm;
+            padding-bottom: 20mm;
+        }
+
+        /* Header Estilizado */
+        .header {
+            text-align: left;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            color: #1a1a1a;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            color: #d4af37;
+            font-weight: bold;
             font-size: 14px;
         }
-        .ticket-container {
-            padding: 20px;
-        }
-        /* Tarjeta de Ticket */
-        .ticket-card {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            margin-bottom: 30px;
+
+        /* Resumen del Pedido con estilo "Recibo Moderno" */
+        .order-meta-table {
             width: 100%;
-            overflow: hidden;
-            page-break-inside: avoid; /* Evita que un ticket se parta entre dos páginas */
-        }
-        .ticket-left {
-            width: 70%;
-            float: left;
-            padding: 20px;
-        }
-        .ticket-right {
-            width: 25%;
-            float: right;
-            padding: 20px;
-            text-align: center;
             background-color: #fafafa;
-            border-left: 1px solid #eee;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 40px;
         }
-        .clear { clear: both; }
-        .ticket-type {
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 12px;
+
+        .order-meta-table td {
+            padding: 15px 20px;
+        }
+
+        .label-sm {
+            display: block;
+            font-size: 10px;
             text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-        .event-name {
-            font-size: 22px;
-            font-weight: bold;
-            margin: 5px 0;
-        }
-        .attendee-name {
-            font-size: 18px;
-            margin-top: 15px;
-        }
-        .qr-code {
-            width: 120px;
-            height: 120px;
-        }
-        .footer-note {
-            font-size: 10px;
             color: #888;
-            margin-top: 10px;
+            margin-bottom: 3px;
         }
-        .camping-badge {
-            background-color: #27ae60;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
+
+        .value-lg {
+            font-size: 15px;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+
+        /* Títulos de Sección */
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            border-bottom: 1px solid #d4af37;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* --- PARTE DEL TICKET (Mantenida según tu petición) --- */
+        .ticket-table {
+            width: 100%;
+            border: 1px dashed #666;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-collapse: collapse;
+            page-break-inside: avoid;
+        }
+
+        .ticket-info {
+            width: 70%;
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        .ticket-qr-cell {
+            width: 30%;
+            padding: 10px;
+            text-align: center;
+            vertical-align: middle;
+            border-left: 1px solid #eee;
+            background-color: #fdfdfd;
+        }
+
+        .ticket-type { color: #e74c3c; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .event-name { font-size: 18px; font-weight: bold; margin: 5px 0; display: block; }
+        .attendee { font-size: 14px; color: #444; }
+        .qr-img { width: 100px; height: 100px; }
+        .qr-id { font-size: 8px; color: #999; margin-top: 4px; }
+        /* --- FIN PARTE TICKET --- */
+
+        /* Footer Informativo */
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
             font-size: 10px;
+            color: #666;
+        }
+
+        .footer-cols {
+            width: 100%;
+        }
+
+        .footer-cols td {
+            width: 33%;
+            vertical-align: top;
+            padding-right: 15px;
+        }
+
+        .important-note {
+            background-color: #fff9e6;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #d4af37;
+            margin-top: 20px;
+            font-size: 11px;
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1 style="margin:0;">VALKYRIA FESTIVAL</h1>
-    <p style="margin:5px 0 0 0; font-size: 14px;">TUS CREDENCIALES DE ACCESO</p>
-</div>
+<div class="sidebar-accent"></div>
 
-<div class="order-summary">
-    <strong>Pedido:</strong> #<span th:text="${order.id}">001</span> |
-    <strong>Comprador:</strong> <span th:text="${customerName}">Nombre del Cliente</span> |
-    <strong>Fecha:</strong> <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">20/04/2026</span>
-</div>
+<div class="main-content">
 
-<div class="ticket-container">
-
-    <div th:each="ticket : ${order.tickets}" class="ticket-card">
-        <div class="ticket-left">
-            <div class="ticket-type">ENTRADA OFICIAL</div>
-            <div class="event-name" th:text="${ticket.ticketType.name}">ABONO GENERAL</div>
-            <div class="attendee-name">
-                <small>Asistente:</small><br/>
-                <strong th:text="${ticket.firstName + ' ' + ticket.lastName}">Nombre Apellido</strong>
-            </div>
-            <p class="footer-note">Presenta este código en la entrada principal. No compartas esta credencial.</p>
-        </div>
-        <div class="ticket-right">
-            <img th:src="${'data:image/png;base64,' + qrMap.get('T' + ticket.id)}" class="qr-code" />
-            <div style="font-size: 10px; margin-top: 5px;" th:text="${ticket.qrCode}">ID-QR</div>
-        </div>
-        <div class="clear"></div>
+    <div class="header">
+        <h1>Valkyria Festival</h1>
+        <p>Confirmación de Reserva Oficial • 2026</p>
     </div>
 
-    <div th:each="camping : ${order.campings}" class="ticket-card">
-        <div class="ticket-left">
-            <div class="ticket-type"><span class="camping-badge">ZONA CAMPING</span></div>
-            <div class="event-name" th:text="${camping.campingType.name}">ZONA CONFORT</div>
-            <div class="attendee-name">
-                <small>Titular Reserva:</small><br/>
-                <strong th:text="${camping.firstName + ' ' + camping.lastName}">Nombre Apellido</strong>
-            </div>
-            <p class="footer-note">Válido para acceso a la zona de descanso asignada.</p>
+    <table class="order-meta-table">
+        <tr>
+            <td>
+                <span class="label-sm">ID del Pedido</span>
+                <span class="value-lg" th:text="'#' + ${order.id}">#0001</span>
+            </td>
+            <td>
+                <span class="label-sm">Titular de Compra</span>
+                <span class="value-lg" th:text="${customerName}">Nombre del Cliente</span>
+            </td>
+            <td style="text-align: right;">
+                <span class="label-sm">Fecha de Emisión</span>
+                <span class="value-lg" th:text="${#temporals.format(order.orderDate, 'dd MMMM, yyyy')}">20 Abril, 2026</span>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">Tus Entradas de Acceso</div>
+
+    <div th:each="ticket : ${order.tickets}">
+        <table class="ticket-table">
+            <tr>
+                <td class="ticket-info">
+                    <div class="ticket-type">Entrada Oficial</div>
+                    <span class="event-name" th:text="${ticket.ticketType.name}">ABONO GENERAL</span>
+                    <div class="attendee">
+                        <strong>Asistente:</strong> <span th:text="${ticket.firstName + ' ' + ticket.lastName}">Nombre</span>
+                    </div>
+                </td>
+                <td class="ticket-qr-cell">
+                    <img th:src="${'data:image/png;base64,' + qrMap.get('T' + ticket.id)}" class="qr-img" />
+                    <div class="qr-id" th:text="${ticket.qrCode}">ID</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div th:if="${!order.campings.isEmpty()}">
+        <div class="section-title" style="margin-top: 30px;">Reservas de Camping</div>
+        <div th:each="camping : ${order.campings}">
+            <table class="ticket-table" style="border-left: 4px solid #27ae60;">
+                <tr>
+                    <td class="ticket-info">
+                        <div class="ticket-type" style="color: #27ae60;">Zona de Descanso</div>
+                        <span class="event-name" th:text="${camping.campingType.name}">ZONA CONFORT</span>
+                        <div class="attendee">
+                            <strong>Titular:</strong> <span th:text="${camping.firstName + ' ' + camping.lastName}">Nombre</span>
+                        </div>
+                    </td>
+                    <td class="ticket-qr-cell">
+                        <img th:src="${'data:image/png;base64,' + qrMap.get('C' + camping.id)}" class="qr-img" />
+                        <div class="qr-id" th:text="${camping.qrCode}">ID</div>
+                    </td>
+                </tr>
+            </table>
         </div>
-        <div class="ticket-right">
-            <img th:src="${'data:image/png;base64,' + qrMap.get('C' + camping.id)}" class="qr-code" />
-            <div style="font-size: 10px; margin-top: 5px;" th:text="${camping.qrCode}">ID-QR</div>
-        </div>
-        <div class="clear"></div>
+    </div>
+
+    <div class="important-note">
+        <strong>¡Importante!</strong> Presenta este documento de forma digital o impresa en el control de accesos.
+        Cada código QR es único y permite un solo acceso al recinto. No compartas fotos de tus entradas en redes sociales.
+    </div>
+
+    <div class="footer">
+        <table class="footer-cols">
+            <tr>
+                <td>
+                    <strong>¿DUDAS O PROBLEMAS?</strong><br/>
+                    Soporte: info@valkyriafest.com<br/>
+                    WhatsApp: +34 600 000 000
+                </td>
+                <td>
+                    <strong>LOCALIZACIÓN</strong><br/>
+                    Recinto Ferial Valkyria<br/>
+                    Sevilla, España
+                </td>
+                <td style="text-align: right;">
+                    <strong>SÍGUENOS</strong><br/>
+                    @ValkyriaFestOfficial<br/>
+                    #Valkyria2026
+                </td>
+            </tr>
+        </table>
     </div>
 
 </div>

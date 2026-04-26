@@ -1,5 +1,6 @@
 package org.iesalixar.daw2.GarikAsatryan.valkyria.services;
 
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Camping;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Order;
@@ -9,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
@@ -28,13 +28,11 @@ public class PdfGeneratorService {
     public byte[] generateOrderPdf(Order order) throws Exception {
         logger.info("Generando PDF profesional para pedido #{}", order.getId());
 
-        // 1. Preparar datos adicionales (Nombre y QRs en Base64)
+        // 1. Preparar datos
         String customerName = (order.getUser() != null)
                 ? order.getUser().getFirstName() + " " + order.getUser().getLastName()
                 : "Invitado (" + order.getGuestEmail() + ")";
 
-        // Mapa para guardar los QR convertidos a Base64
-        // Usamos una clave única para identificar si es ticket (T) o camping (C)
         Map<String, String> qrMap = new HashMap<>();
 
         for (Ticket t : order.getTickets()) {
@@ -47,29 +45,27 @@ public class PdfGeneratorService {
             qrMap.put("C" + c.getId(), Base64.getEncoder().encodeToString(qrBytes));
         }
 
-        // 2. Crear el contexto de Thymeleaf
+        // 2. Contexto Thymeleaf
         Context context = new Context();
         context.setVariable("order", order);
         context.setVariable("customerName", customerName);
         context.setVariable("qrMap", qrMap);
 
-        // 3. Procesar el HTML
+        // 3. Renderizado HTML
         String htmlContent = templateEngine.process("pdf-order-tickets", context);
 
-        // 4. Renderizar PDF usando Flying Saucer
+        // 4. Construcción del PDF
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            ITextRenderer renderer = new ITextRenderer();
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useFastMode();
+            builder.withHtmlContent(htmlContent, "/");
+            builder.toStream(outputStream);
+            builder.run();
 
-            // Flying Saucer requiere que el HTML sea XML bien formado
-            renderer.setDocumentFromString(htmlContent);
-            renderer.layout();
-            renderer.createPDF(outputStream);
-
-            logger.info("✓ PDF generado correctamente con Thymeleaf");
             return outputStream.toByteArray();
         } catch (Exception e) {
-            logger.error("Error al renderizar el PDF: {}", e.getMessage());
-            throw new RuntimeException("Error en la generación visual del PDF", e);
+            logger.error("Error en la generación del PDF: {}", e.getMessage());
+            throw new RuntimeException("Error visual en PDF", e);
         }
     }
 }

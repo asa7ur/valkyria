@@ -30,6 +30,7 @@
         <java.version>21</java.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <lombok.version>1.18.42</lombok.version>
+        <openhtml.version>1.1.37</openhtml.version>
     </properties>
     <dependencies>
         <dependency>
@@ -148,9 +149,14 @@
             <version>${org.mapstruct.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.xhtmlrenderer</groupId>
-            <artifactId>flying-saucer-pdf-openpdf</artifactId>
-            <version>9.1.22</version>
+            <groupId>io.github.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-pdfbox</artifactId>
+            <version>${openhtml.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-slf4j</artifactId>
+            <version>${openhtml.version}</version>
         </dependency>
     </dependencies>
 
