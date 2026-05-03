@@ -15,6 +15,7 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -278,7 +279,8 @@ public class PaymentService {
      *
      * @param order Pedido para el cual generar y enviar documentación
      */
-    private void sendDocumentation(Order order) {
+    @Async
+    public void sendDocumentation(Order order) {
         logger.info("Iniciando envío de documentación para pedido #{}", order.getId());
 
         try {
