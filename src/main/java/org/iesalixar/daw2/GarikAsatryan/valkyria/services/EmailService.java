@@ -33,6 +33,9 @@ public class EmailService {
     @Value("${app.backend.url}")
     private String backendUrl;
 
+    @Value("${spring.mail.username}")
+    private String mailFrom;
+
     /**
      * Envía un correo de activación utilizando el template HTML de Thymeleaf.
      */
@@ -60,6 +63,8 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(mailFrom);
 
             helper.setTo(to);
             // El asunto se sigue obteniendo de messages.properties
@@ -97,6 +102,8 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(mailFrom);
 
             helper.setTo(to);
             helper.setSubject(getMessage("msg.order.email.subject", new Object[]{order.getId()}));
