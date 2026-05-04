@@ -358,6 +358,11 @@ public class OrderService {
         OrderStatus previousStatus = order.getStatus();
         logger.debug("Estado actual del pedido #{}: {}", orderId, previousStatus);
 
+        if (order.getStatus() == OrderStatus.PAID) {
+            logger.info("El pedido #{} ya figuraba como pagado. Ignorando.", orderId);
+            return order;
+        }
+
         // Actualizar estado a PAID
         order.setStatus(OrderStatus.PAID);
 
