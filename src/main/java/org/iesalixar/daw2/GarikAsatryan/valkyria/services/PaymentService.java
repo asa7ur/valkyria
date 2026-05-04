@@ -193,22 +193,23 @@ public class PaymentService {
                 try {
                     Long orderId = Long.parseLong(orderIdStr);
 
-                    // ==================== PROCESO CRÍTICO ====================
-                    // Paso 4: Confirmar el pago en la base de datos
-                    // ESTO ES LO MÁS IMPORTANTE - debe ejecutarse siempre
+                    // 1. CONFIRMACIÓN (Crítico)
                     Order order = orderService.confirmPayment(orderId);
-                    logger.info("✓ Pago confirmado exitosamente para pedido #{} (Total: {} EUR)",
-                            orderId, order.getTotalPrice());
-                    // =========================================================
+                    logger.info("✓ Pago confirmado en DB para pedido #{}", orderId);
 
-                    // ==================== PROCESOS SECUNDARIOS ====================
-                    // Paso 5: Intentar enviar documentación (PDF + Email)
-                    // Si esto falla, el pedido YA está confirmado, lo cual es correcto
-                    sendDocumentation(order);
-                    // ==============================================================
+                    // 2. DOCUMENTACIÓN (No crítico para Stripe)
+                    try {
+                        // Llamada al método. Si quieres que sea Async de verdad,
+                        // muévelo a otro Service o asegúrate de tener @EnableAsync
+                        sendDocumentation(order);
+                    } catch (Exception e) {
+                        // LOGUEAMOS EL ERROR PERO NO LANZAMOS EXCEPCIÓN
+                        // Así el webhook responderá 200 OK a Stripe aunque falle el email
+                        logger.error("Error enviando documentos, pero el pago ya está marcado: {}", e.getMessage());
+                    }
 
                 } catch (NumberFormatException e) {
-                    logger.error("ID de pedido inválido en webhook: {}", orderIdStr, e);
+                    logger.error("ID de pedido inválido: {}", orderIdStr);
                 }
             } else {
                 logger.warn("No se pudo extraer el ID del pedido del evento de Stripe");
