@@ -18,6 +18,9 @@ public class StageCreateDTO {
     @Size(max = 100, message = "{msg.validation.size}")
     private String name;
 
+    @Size(max = 100, message = "{msg.validation.size}")
+    private String nameEn;
+
     @NotNull(message = "{msg.validation.required}")
     @Min(value = 1, message = "{msg.validation.positive}")
     private Long capacity;

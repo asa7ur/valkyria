@@ -70,6 +70,7 @@ CREATE TABLE ticket_types
 (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     name            VARCHAR(50)    NOT NULL,
+    name_en         VARCHAR(50),
     price           DECIMAL(10, 2) NOT NULL,
     stock_total     INT            NOT NULL,
     stock_available INT            NOT NULL
@@ -95,6 +96,7 @@ CREATE TABLE camping_types
 (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     name            VARCHAR(50)    NOT NULL,
+    name_en         VARCHAR(50),
     price           DECIMAL(10, 2) NOT NULL,
     stock_total     INT            NOT NULL,
     stock_available INT            NOT NULL
@@ -131,6 +133,7 @@ CREATE TABLE stages
 (
     id       BIGINT AUTO_INCREMENT PRIMARY KEY,
     name     VARCHAR(100) NOT NULL UNIQUE,
+    name_en  VARCHAR(100),
     capacity BIGINT       NOT NULL
 );
 

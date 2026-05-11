@@ -16,18 +16,18 @@ VALUES (1, 1),
        (2, 2),
        (3, 3);
 
-INSERT IGNORE INTO ticket_types (name, price, stock_total, stock_available)
-VALUES ('Senda del Guerrero (Abono General)', 95.00, 5000, 5000),
-       ('Banquete en el Valhalla (Experiencia VIP)', 250.00, 200, 200),
-       ('Miércoles - Entrada de Día', 45.00, 1000, 1000),
-       ('Jueves - Entrada de Día', 45.00, 1000, 1000),
-       ('Viernes - Entrada de Día', 55.00, 1000, 1000),
-       ('Sábado - Entrada de Día', 60.00, 1000, 1000);
+INSERT IGNORE INTO ticket_types (name, name_en, price, stock_total, stock_available)
+VALUES ('Senda del Guerrero (Abono General)',       'Warrior''s Path (General Pass)',      95.00, 5000, 5000),
+       ('Banquete en el Valhalla (Experiencia VIP)', 'Valhalla Banquet (VIP Experience)',  250.00,  200,  200),
+       ('Miércoles - Entrada de Día',                'Wednesday - Day Pass',               45.00, 1000, 1000),
+       ('Jueves - Entrada de Día',                   'Thursday - Day Pass',                45.00, 1000, 1000),
+       ('Viernes - Entrada de Día',                  'Friday - Day Pass',                  55.00, 1000, 1000),
+       ('Sábado - Entrada de Día',                   'Saturday - Day Pass',                60.00, 1000, 1000);
 
-INSERT IGNORE INTO camping_types (name, price, stock_total, stock_available)
-VALUES ('Sombra de Yggdrasil (Camping Sombra)', 30.00, 500, 500),
-       ('Morada de Freya (Glamping de Lujo)', 150.00, 50, 50),
-       ('Drakkar sobre Ruedas (Zona Caravanas)', 80.00, 100, 100);
+INSERT IGNORE INTO camping_types (name, name_en, price, stock_total, stock_available)
+VALUES ('Sombra de Yggdrasil (Camping Sombra)', 'Yggdrasil''s Shadow (Shaded Camping)',  30.00, 500, 500),
+       ('Morada de Freya (Glamping de Lujo)',    'Freya''s Dwelling (Luxury Glamping)',  150.00,  50,  50),
+       ('Drakkar sobre Ruedas (Zona Caravanas)', 'Drakkar on Wheels (Caravan Zone)',      80.00, 100, 100);
 
 
 INSERT INTO sponsors (name, phone, email, contribution)
@@ -42,11 +42,11 @@ VALUES ('Cruzcampo', '+34 954 979 000', 'sponsorship@heinekenespana.es', 60000.0
        ('Vans España', '+34 932 203 100', 'marketing@vans.es', 18000.00),
        ('Fnac España', '+34 902 100 632', 'comunicacion@fnac.es', 12000.00);
 
-INSERT INTO stages (name, capacity)
-VALUES ('Asgard del Sur', 15000),
-       ('Valhalla de Triana', 10000),
-       ('Fenrir del Al-Ándalus', 8000),
-       ('Drakkar de Guadalquivir', 5000);
+INSERT INTO stages (name, name_en, capacity)
+VALUES ('Asgard del Sur',          'Southern Asgard',        15000),
+       ('Valhalla de Triana',      'Triana Valhalla',         10000),
+       ('Fenrir del Al-Ándalus',   'Al-Ándalus Fenrir',        8000),
+       ('Drakkar de Guadalquivir', 'Guadalquivir Drakkar',     5000);
 
 INSERT INTO sponsor_stage (sponsor_id, stage_id)
 VALUES (1, 1),
@@ -553,3 +553,108 @@ VALUES ('2026-08-08 19:00:00', '2026-08-08 20:00:00', 76, 4), -- Toundra
        ('2026-08-08 20:30:00', '2026-08-08 21:45:00', 77, 4), -- Babasónicos
        ('2026-08-08 22:15:00', '2026-08-08 23:45:00', 78, 4), -- Vetusta Morla
        ('2026-08-09 00:15:00', '2026-08-09 01:45:00', 79, 4); -- Ska-P
+
+-- =====================================================================
+-- PEDIDOS, TICKETS Y CAMPINGS DE EJEMPLO
+-- 15 pedidos PAID distribuidos en varios meses para la gráfica de ingresos
+-- + 1 PENDING y 1 CANCELLED para datos más realistas
+-- =====================================================================
+
+INSERT INTO orders (order_date, total_price, status, user_id, guest_email)
+VALUES
+  ('2026-01-10 10:30:00', 125.00, 'PAID',      3,    NULL),                       -- 1:  nacho, abono general + sombra
+  ('2026-01-20 16:45:00', 250.00, 'PAID',      1,    NULL),                       -- 2:  garik, VIP
+  ('2026-01-28 11:00:00', 190.00, 'PAID',   NULL, 'pedro.garcia@gmail.com'),      -- 3:  guest, 2× abono general
+  ('2026-02-05 14:20:00', 135.00, 'PAID',      3,    NULL),                       -- 4:  nacho, viernes + caravana
+  ('2026-02-14 09:15:00', 120.00, 'PAID',   NULL, 'carlos.ruiz@hotmail.com'),     -- 5:  guest, 2× sábado
+  ('2026-02-22 18:00:00',  95.00, 'PAID',      3,    NULL),                       -- 6:  nacho, abono general
+  ('2026-03-08 12:30:00', 400.00, 'PAID',   NULL, 'javier.sanchez@email.es'),     -- 7:  guest, VIP + glamping
+  ('2026-03-15 20:00:00',  90.00, 'PAID',      3,    NULL),                       -- 8:  nacho, 2× miércoles
+  ('2026-03-25 17:45:00', 285.00, 'PAID',   NULL, 'grupo.vikingo@gmail.com'),     -- 9:  guest, 3× abono general
+  ('2026-04-03 11:00:00', 400.00, 'PAID',      1,    NULL),                       -- 10: garik, VIP + glamping
+  ('2026-04-12 15:30:00', 170.00, 'PAID',   NULL, 'elena.morales@outlook.com'),   -- 11: guest, 2× viernes + 2× sombra
+  ('2026-04-20 09:00:00', 125.00, 'PAID',      3,    NULL),                       -- 12: nacho, abono general + sombra
+  ('2026-05-02 13:15:00', 380.00, 'PAID',   NULL, 'grupo.amigos@gmail.com'),      -- 13: guest, 4× abono general
+  ('2026-05-07 19:30:00', 200.00, 'PAID',      3,    NULL),                       -- 14: nacho, 2× sábado + caravana
+  ('2026-05-10 22:00:00', 400.00, 'PAID',   NULL, 'antonio.vega@email.com'),      -- 15: guest, VIP + glamping
+  ('2026-05-11 10:00:00', 190.00, 'PENDING',   3,    NULL),                       -- 16: nacho, pendiente
+  ('2026-05-11 11:30:00', 250.00, 'CANCELLED', 1,    NULL);                       -- 17: garik, cancelado
+
+INSERT INTO tickets (first_name, last_name, document_type, document_number, birth_date, qr_code, status, ticket_type_id, order_id)
+VALUES
+  -- Orden 1
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0001', 'ACTIVE', 1, 1),
+  -- Orden 2
+  ('Garik',   'Asatryan',  'DNI', '12345678B', '1996-12-30', 'qr-t-0002', 'ACTIVE', 2, 2),
+  -- Orden 3
+  ('Pedro',   'García',    'DNI', '34567892C', '1990-03-15', 'qr-t-0003', 'ACTIVE', 1, 3),
+  ('María',   'López',     'DNI', '45678903D', '1992-07-20', 'qr-t-0004', 'ACTIVE', 1, 3),
+  -- Orden 4
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0005', 'ACTIVE', 5, 4),
+  -- Orden 5
+  ('Carlos',  'Ruiz',      'DNI', '56789014E', '1988-11-05', 'qr-t-0006', 'ACTIVE', 6, 5),
+  ('Ana',     'Martínez',  'DNI', '67890125F', '1994-04-30', 'qr-t-0007', 'ACTIVE', 6, 5),
+  -- Orden 6
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0008', 'ACTIVE', 1, 6),
+  -- Orden 7
+  ('Javier',  'Sánchez',   'DNI', '78901236G', '1985-09-12', 'qr-t-0009', 'ACTIVE', 2, 7),
+  -- Orden 8
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0010', 'ACTIVE', 3, 8),
+  ('Laura',   'Fernández', 'DNI', '89012347H', '1998-02-14', 'qr-t-0011', 'ACTIVE', 3, 8),
+  -- Orden 9
+  ('Roberto', 'Díaz',      'DNI', '90123458J', '1987-06-22', 'qr-t-0012', 'ACTIVE', 1, 9),
+  ('Sofía',   'Hernández', 'DNI', '01234569K', '1995-12-01', 'qr-t-0013', 'ACTIVE', 1, 9),
+  ('Miguel',  'Torres',    'DNI', '11223344L', '1993-08-18', 'qr-t-0014', 'ACTIVE', 1, 9),
+  -- Orden 10
+  ('Garik',   'Asatryan',  'DNI', '12345678B', '1996-12-30', 'qr-t-0015', 'ACTIVE', 2, 10),
+  -- Orden 11
+  ('Elena',   'Morales',   'DNI', '22334455M', '1991-05-08', 'qr-t-0016', 'ACTIVE', 5, 11),
+  ('Pablo',   'Jiménez',   'DNI', '33445566N', '1989-10-25', 'qr-t-0017', 'ACTIVE', 5, 11),
+  -- Orden 12
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0018', 'ACTIVE', 1, 12),
+  -- Orden 13
+  ('Diego',   'Romero',    'DNI', '44556677P', '1986-03-30', 'qr-t-0019', 'ACTIVE', 1, 13),
+  ('Carmen',  'Alonso',    'DNI', '55667788Q', '1996-07-11', 'qr-t-0020', 'ACTIVE', 1, 13),
+  ('Sergio',  'Navarro',   'DNI', '66778899R', '1993-01-04', 'qr-t-0021', 'ACTIVE', 1, 13),
+  ('Isabel',  'Ramos',     'DNI', '77889900S', '1990-09-17', 'qr-t-0022', 'ACTIVE', 1, 13),
+  -- Orden 14
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0023', 'ACTIVE', 6, 14),
+  ('Paula',   'Martín',    'DNI', '88990011T', '1995-08-24', 'qr-t-0024', 'ACTIVE', 6, 14),
+  -- Orden 15
+  ('Antonio', 'Vega',      'DNI', '99001122U', '1983-04-05', 'qr-t-0025', 'ACTIVE', 2, 15),
+  -- Orden 16 (PENDING)
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0026', 'ACTIVE', 1, 16),
+  ('Nacho',   'Muñoz',     'DNI', '23456781A', '1996-01-27', 'qr-t-0027', 'ACTIVE', 1, 16),
+  -- Orden 17 (CANCELLED)
+  ('Garik',   'Asatryan',  'DNI', '12345678B', '1996-12-30', 'qr-t-0028', 'CANCELLED', 2, 17);
+
+INSERT INTO campings (first_name, last_name, document_type, document_number, birth_date, qr_code, status, camping_type_id, order_id)
+VALUES
+  -- Orden 1: Nacho, sombra
+  ('Nacho',   'Muñoz',    'DNI', '23456781A', '1996-01-27', 'qr-c-0001', 'ACTIVE', 1, 1),
+  -- Orden 4: Nacho, caravana
+  ('Nacho',   'Muñoz',    'DNI', '23456781A', '1996-01-27', 'qr-c-0002', 'ACTIVE', 3, 4),
+  -- Orden 7: Javier, glamping
+  ('Javier',  'Sánchez',  'DNI', '78901236G', '1985-09-12', 'qr-c-0003', 'ACTIVE', 2, 7),
+  -- Orden 10: Garik, glamping
+  ('Garik',   'Asatryan', 'DNI', '12345678B', '1996-12-30', 'qr-c-0004', 'ACTIVE', 2, 10),
+  -- Orden 11: Elena + Pablo, sombra
+  ('Elena',   'Morales',  'DNI', '22334455M', '1991-05-08', 'qr-c-0005', 'ACTIVE', 1, 11),
+  ('Pablo',   'Jiménez',  'DNI', '33445566N', '1989-10-25', 'qr-c-0006', 'ACTIVE', 1, 11),
+  -- Orden 12: Nacho, sombra
+  ('Nacho',   'Muñoz',    'DNI', '23456781A', '1996-01-27', 'qr-c-0007', 'ACTIVE', 1, 12),
+  -- Orden 14: Nacho, caravana
+  ('Nacho',   'Muñoz',    'DNI', '23456781A', '1996-01-27', 'qr-c-0008', 'ACTIVE', 3, 14),
+  -- Orden 15: Antonio, glamping
+  ('Antonio', 'Vega',     'DNI', '99001122U', '1983-04-05', 'qr-c-0009', 'ACTIVE', 2, 15);
+
+-- Ajuste de stock disponible tras las compras
+UPDATE ticket_types SET stock_available = 4986 WHERE id = 1; -- 14 vendidas (12 ACTIVE + 2 PENDING)
+UPDATE ticket_types SET stock_available =  196 WHERE id = 2; -- 4 ACTIVE (la de orden 17 está CANCELLED)
+UPDATE ticket_types SET stock_available =  998 WHERE id = 3; -- 2 vendidas
+UPDATE ticket_types SET stock_available =  997 WHERE id = 5; -- 3 vendidas
+UPDATE ticket_types SET stock_available =  996 WHERE id = 6; -- 4 vendidas
+
+UPDATE camping_types SET stock_available = 496 WHERE id = 1; -- 4 vendidas
+UPDATE camping_types SET stock_available =  47 WHERE id = 2; -- 3 vendidas
+UPDATE camping_types SET stock_available =  98 WHERE id = 3; -- 2 vendidas
