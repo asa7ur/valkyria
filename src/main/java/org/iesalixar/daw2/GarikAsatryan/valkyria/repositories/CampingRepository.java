@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface CampingRepository extends JpaRepository<Camping, Long> {
     @Query("SELECT c FROM Camping c WHERE " +
             "LOWER(c.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
@@ -16,4 +18,7 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
             "LOWER(c.campingType.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
             "LOWER(c.status) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<Camping> searchCampings(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    @Query("SELECT c.campingType.name, COUNT(c) FROM Camping c WHERE c.status <> 'CANCELLED' GROUP BY c.campingType.name ORDER BY COUNT(c) DESC")
+    List<Object[]> countByType();
 }

@@ -8,8 +8,9 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.repositories.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class DashboardService {
     private final OrderRepository orderRepository;
     private final ArtistRepository artistRepository;
     private final TicketRepository ticketRepository;
+    private final CampingRepository campingRepository;
     private final UserRepository userRepository;
 
     public DashboardStatsDTO getAdminDashboardStats() {
@@ -35,13 +37,29 @@ public class DashboardService {
         // Cálculo de capacidad basado en tickets vendidos
         double capacity = (ticketsCount / 2000.0) * 100;
 
+        List<DashboardStatsDTO.RevenuePoint> salesTrend = orderRepository.findDailyRevenue().stream()
+                .map(row -> new DashboardStatsDTO.RevenuePoint(
+                        row[0].toString(),
+                        (BigDecimal) row[1]
+                ))
+                .collect(Collectors.toList());
+
+        List<DashboardStatsDTO.SalesBreakdownPoint> salesBreakdown = new java.util.ArrayList<>();
+        ticketRepository.countByType().stream()
+                .map(row -> new DashboardStatsDTO.SalesBreakdownPoint(row[0].toString(), (Long) row[1]))
+                .forEach(salesBreakdown::add);
+        campingRepository.countByType().stream()
+                .map(row -> new DashboardStatsDTO.SalesBreakdownPoint(row[0].toString(), (Long) row[1]))
+                .forEach(salesBreakdown::add);
+
         return DashboardStatsDTO.builder()
                 .totalRevenue(totalRevenue)
                 .totalArtists(artistsCount)
                 .totalTicketsSold(ticketsCount)
                 .totalActiveUsers(usersCount)
                 .ticketCapacityPercentage(Math.min(capacity, 100.0))
-                .salesTrend(new ArrayList<>())
+                .salesTrend(salesTrend)
+                .salesBreakdown(salesBreakdown)
                 .build();
     }
 }

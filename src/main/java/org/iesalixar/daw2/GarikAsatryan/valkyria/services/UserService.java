@@ -5,6 +5,7 @@ import org.iesalixar.daw2.GarikAsatryan.valkyria.components.PaginationComponent;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.FilterDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserUpdateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.PasswordChangeDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Role;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
@@ -100,7 +101,7 @@ public class UserService {
      * No solemos actualizar la contraseña aquí (se hace en un flujo de "cambiar password").
      */
     @Transactional
-    public UserDTO updateUser(Long id, UserRegistrationDTO dto) {
+    public UserDTO updateUser(Long id, UserUpdateDTO dto) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new AppException("msg.error.user-not-found", id));
 
@@ -108,13 +109,9 @@ public class UserService {
             throw new AppException("msg.register.error.email-exists", dto.getEmail());
         }
 
-        // Actualizamos campos básicos
         userMapper.updateEntityFromDTO(dto, existingUser);
-
-        // 1. Sincronizar el estado de activación
         existingUser.setEnabled(dto.isEnabled());
 
-        // 2. Gestionar roles si vienen en el DTO
         if (dto.getRoles() != null) {
             List<Role> roles = dto.getRoles().stream()
                     .map(roleName -> roleRepository.findByName(roleName)

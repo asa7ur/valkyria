@@ -17,8 +17,8 @@ public class DashboardStatsDTO {
     private long totalActiveUsers;
     private double ticketCapacityPercentage;
 
-    // Datos para la gráfica de tendencia (Día -> Total)
     private List<RevenuePoint> salesTrend;
+    private List<SalesBreakdownPoint> salesBreakdown;
 
     @Getter
     @Setter
@@ -26,5 +26,13 @@ public class DashboardStatsDTO {
     public static class RevenuePoint {
         private String date;
         private BigDecimal amount;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class SalesBreakdownPoint {
+        private String label;
+        private long count;
     }
 }

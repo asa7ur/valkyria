@@ -26,6 +26,9 @@ public class CampingTypeCreateDTO {
     @Size(max = 50, message = "{msg.validation.size}")
     private String name;
 
+    @Size(max = 50, message = "{msg.validation.size}")
+    private String nameEn;
+
     @NotNull(message = "{msg.validation.required}")
     @PositiveOrZero(message = "{msg.validation.positive}")
     private BigDecimal price;

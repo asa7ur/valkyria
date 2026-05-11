@@ -28,6 +28,10 @@ public class Stage {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @Size(max = 100, message = "{msg.validation.size}")
+    @Column(name = "name_en", length = 100)
+    private String nameEn;
+
     @NotNull(message = "{msg.validation.required}")
     @Min(value = 1, message = "{msg.validation.positive}")
     @Column(name = "capacity", nullable = false)

@@ -2,6 +2,7 @@ package org.iesalixar.daw2.GarikAsatryan.valkyria.mappers;
 
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserRegistrationDTO;
+import org.iesalixar.daw2.GarikAsatryan.valkyria.dtos.UserUpdateDTO;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.Role;
 import org.iesalixar.daw2.GarikAsatryan.valkyria.entities.User;
 import org.mapstruct.*;
@@ -36,7 +37,7 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
-    void updateEntityFromDTO(UserRegistrationDTO dto, @MappingTarget User entity);
+    void updateEntityFromDTO(UserUpdateDTO dto, @MappingTarget User entity);
 
     /**
      * Convierte la lista de entidades Role a una lista de Strings con el nombre del rol.
