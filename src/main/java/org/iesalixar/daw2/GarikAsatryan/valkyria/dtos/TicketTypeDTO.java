@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 public class TicketTypeDTO {
     private Long id;
     private String name;
+    private String nameEn;
     private BigDecimal price;
     private Integer stockTotal;
     private Integer stockAvailable;

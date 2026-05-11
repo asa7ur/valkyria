@@ -19,6 +19,9 @@ public class CampingType {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
+    @Column(name = "name_en", length = 50)
+    private String nameEn;
+
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
