@@ -31,12 +31,16 @@ public interface UserMapper {
     @Mapping(target = "enabled", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "authProvider", ignore = true)
+    @Mapping(target = "providerId", ignore = true)
     User toEntity(UserRegistrationDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "authProvider", ignore = true)
+    @Mapping(target = "providerId", ignore = true)
     void updateEntityFromDTO(UserUpdateDTO dto, @MappingTarget User entity);
 
     /**
