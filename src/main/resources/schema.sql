@@ -19,15 +19,17 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 1. USUARIOS Y SEGURIDAD
 CREATE TABLE users
 (
-    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
-    email        VARCHAR(100) UNIQUE NOT NULL,
-    password     VARCHAR(255)        NOT NULL,
-    enabled      BOOLEAN   DEFAULT TRUE,
-    first_name   VARCHAR(100)        NOT NULL,
-    last_name    VARCHAR(100)        NOT NULL,
-    birth_date   DATE                NOT NULL,
-    phone        VARCHAR(30)         NOT NULL,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+    email         VARCHAR(100) UNIQUE NOT NULL,
+    password      VARCHAR(255),
+    enabled       BOOLEAN   DEFAULT TRUE,
+    first_name    VARCHAR(100)        NOT NULL,
+    last_name     VARCHAR(100),
+    birth_date    DATE,
+    phone         VARCHAR(30),
+    created_date  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    auth_provider VARCHAR(20)  DEFAULT 'LOCAL',
+    provider_id   VARCHAR(255)
 );
 
 CREATE TABLE roles
