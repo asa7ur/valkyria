@@ -104,6 +104,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
         configuration.setAllowedOrigins(Arrays.asList(
        		"https://valkyria.alixarblue.team",
         	"https://www.valkyria.alixarblue.team"
