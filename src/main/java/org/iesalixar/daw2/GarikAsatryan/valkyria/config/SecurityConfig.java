@@ -82,7 +82,12 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/api/v1/**",
                                 "/oauth2/**",
-                                "/login/oauth2/**")
+                                "/login/oauth2/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api-docs/**",
+                                "/api-docs",
+                                "/api-docs.yaml")
                         .permitAll()
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .anyRequest().authenticated()
